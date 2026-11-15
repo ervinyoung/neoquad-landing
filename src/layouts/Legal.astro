@@ -1,0 +1,257 @@
+---
+// A legal page: a title, the date it was last updated, a contents list that follows your reading,
+// and the text. The text itself lives in src/content/legal/ and is never restyled by hand.
+//
+//   name   "privacy" or "terms": picks the text, its contents list and its date
+//   title  the page title, in parts, like a hero line
+import Base from './Base.astro';
+import { links } from '../config';
+
+interface Props {
+  name: 'privacy' | 'terms';
+  title: [string, string];
+  description: string;
+}
+const { name, title, description } = Astro.props;
+
+const texts = import.meta.glob<string>('../content/legal/*.html', { query: '?raw', import: 'default', eager: true });
+const metas = import.meta.glob<{ toc: { id: string; label: string }[]; updated: string }>('../content/legal/*.json', {
+  import: 'default',
+  eager: true,
+});
+const text = texts[`../content/legal/${name}.html`];
+const meta = metas[`../content/legal/${name}.json`];
+const other = name === 'privacy' ? { href: '/terms', label: 'Terms of Service' } : { href: '/privacy', label: 'Privacy Policy' };
+---
+
+<Base title={`${title[0]} ${title[1]} neoQuad`} description={description}>
+  <article class="legal section section--white">
+    <div class="wrap">
+      <header class="legal-head">
+        <h1 class="line line--hero">{title[0]} <i>{title[1]}</i></h1>
+        <p class="muted">Last updated {meta.updated}</p>
+      </header>
+
+      <div class="legal-body">
+        <nav class="legal-toc" aria-label="On this page">
+          <ol>
+            {
+              meta.toc.map((item) => (
+                <li>
+                  <a href={`#${item.id}`}>{item.label}</a>
+                </li>
+              ))
+            }
+          </ol>
+        </nav>
+
+        <div class="prose">
+          <Fragment set:html={text} />
+          <section id="contact">
+            <h2>Questions<i>?</i></h2>
+            <p>
+              Write to <a class="link" href={`mailto:${links.email}`}>{links.email}</a>. We read every message.
+            </p>
+            <p>Also see the <a class="link" href={other.href}>{other.label}</a>.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </article>
+</Base>
+
+<script>
+  // The contents list marks the section being read.
+  let watch: IntersectionObserver | null = null;
+  document.addEventListener('astro:page-load', () => {
+    watch?.disconnect();
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('.legal-toc a')];
+    if (!links.length) return;
+    const byId = new Map(links.map((a) => [a.hash.slice(1), a]));
+    watch = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          links.forEach((a) => a.removeAttribute('aria-current'));
+          byId.get(entry.target.id)?.setAttribute('aria-current', 'true');
+        }
+      },
+      { rootMargin: '-20% 0px -70% 0px' },
+    );
+    document.querySelectorAll('.prose section[id]').forEach((section) => watch!.observe(section));
+  });
+</script>
+
+<style>
+  .legal {
+    padding-top: clamp(160px, 20vw, 240px);
+    min-height: 100svh;
+  }
+
+  .legal-head p {
+    margin-top: clamp(16px, 2vw, 28px);
+    font-size: 1rem;
+  }
+
+  .legal-body {
+    display: grid;
+    gap: 48px clamp(40px, 7vw, 120px);
+    margin-top: clamp(56px, 8vw, 112px);
+  }
+
+  .legal-toc {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .legal-body {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .legal-toc {
+      display: block;
+      position: sticky;
+      top: 120px;
+      align-self: start;
+    }
+  }
+
+  .legal-toc a {
+    display: block;
+    padding: 7px 0 7px 16px;
+    border-left: 1px solid var(--rule);
+    color: var(--secondary);
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    transition:
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+
+  .legal-toc a[aria-current] {
+    color: var(--graphite);
+    border-left-color: var(--accent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .legal-toc a:hover {
+      color: var(--graphite);
+    }
+  }
+
+  /* The text. Its markup comes from the content files, so every rule here reaches in with :global. */
+  .prose {
+    max-width: 42rem;
+    font-size: clamp(1.0625rem, 1rem + 0.2vw, 1.1875rem);
+    line-height: 1.6;
+    color: #3a3a3c;
+  }
+
+  .prose :global(.lede) {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--graphite);
+    text-wrap: pretty;
+  }
+
+  .prose :global(section) {
+    margin-top: clamp(48px, 6vw, 72px);
+    padding-top: clamp(28px, 3vw, 36px);
+    border-top: 1px solid var(--rule);
+  }
+
+  .prose :global(h2) {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(1.625rem, 1.4rem + 0.9vw, 2.125rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--graphite);
+    margin-bottom: 18px;
+  }
+
+  .prose :global(p + p),
+  .prose :global(ul),
+  .prose :global(.prohibited),
+  .prose :global(.elig),
+  .prose :global(.facts) {
+    margin-top: 16px;
+  }
+
+  .prose :global(strong) {
+    font-weight: 500;
+    color: var(--graphite);
+  }
+
+  .prose :global(li),
+  .prose :global(.p-item) {
+    position: relative;
+    padding: 10px 0 10px 26px;
+    border-top: 1px solid var(--rule);
+    text-wrap: pretty;
+  }
+
+  .prose :global(li:first-child),
+  .prose :global(.p-item:first-child) {
+    border-top: 0;
+  }
+
+  .prose :global(li)::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: calc(10px + 0.8em - 2.5px);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--graphite);
+  }
+
+  .prose :global(.p-item .x) {
+    position: absolute;
+    left: 0;
+    font-size: 0.8em;
+    line-height: 2;
+    color: var(--secondary);
+  }
+
+  /* Short facts and requirements: a quiet grid of cards. */
+  .prose :global(.facts),
+  .prose :global(.elig) {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    margin-top: clamp(28px, 3vw, 40px);
+  }
+
+  .prose :global(.fact),
+  .prose :global(.e) {
+    padding: 22px 24px 24px;
+    border-radius: 20px;
+    background: var(--mist);
+  }
+
+  .prose :global(.fact p),
+  .prose :global(.e p) {
+    margin-top: 6px;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--secondary);
+  }
+
+  .prose :global(.fact strong),
+  .prose :global(.e strong) {
+    display: block;
+    font-family: var(--serif);
+    font-size: 1.1875rem;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .prose :global(.e-num) {
+    display: none;
+  }
+</style>

@@ -1,0 +1,257 @@
+---
+// Students: what it is, and one way in.
+import { Image } from 'astro:assets';
+import QRCode from 'qrcode';
+import Base from '../layouts/Base.astro';
+import Hero from '../components/Hero.astro';
+import Action from '../components/Action.astro';
+import { links, campus } from '../config';
+
+import glassSeed from '../assets/logo/glass-seed.png';
+import screenEvents from '../assets/app/screen-events.png';
+import screenEvent from '../assets/app/screen-event.png';
+import screenPlaces from '../assets/app/screen-places.png';
+
+// Framed by tools/frame-screens.py: the deck's dark screens in the silver iPhone, at 9:41.
+const screens = [
+  {
+    image: screenEvents,
+    alt: 'neoQuad on an iPhone: a satellite map of the SBCC campus with pins for live events, and a list of what is happening now',
+    line: ['New campus.', 'Not lost.'],
+    text: 'Every event on a map of campus, with what is happening right now.',
+  },
+  {
+    image: screenEvent,
+    alt: 'neoQuad on an iPhone: the Club Rush event, with its place and time, free food, directions and a calendar button',
+    line: ['Stay in the loop.', ''],
+    text: 'Where it is, when it ends, and whether there is free food.',
+  },
+  {
+    image: screenPlaces,
+    alt: 'neoQuad on an iPhone: Places, with a search field for buildings, rooms and classes over the campus map',
+    line: ['Let’s meet', 'at the quad.'],
+    text: 'Find any building, room or class, and walk straight to it.',
+  },
+];
+
+const qr = await QRCode.toString(links.appStore, {
+  type: 'svg',
+  margin: 0,
+  errorCorrectionLevel: 'M',
+  color: { dark: '#000000', light: '#0000' },
+});
+---
+
+<Base
+  audience="students"
+  title={`neoQuad. Every event at ${campus.short}. One place.`}
+  description={`Clubs, workshops, free food and games at ${campus.name}, posted by the people running them. Free for students.`}
+>
+  <Hero scene="dusk" line={[`Every event at ${campus.short}.`, 'br', { i: 'One place.' }]}>
+    <Action to="app" />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="wrap">
+      <h2 class="line line--section statement" data-reveal>
+        Clubs, workshops, free food and games, <i>posted by the people running them.</i>
+      </h2>
+
+      <ul class="screens">
+        {
+          screens.map((screen, i) => (
+            <li class="screen" data-reveal style={`--i:${i}`}>
+              <figure class="screen-frame">
+                <Image src={screen.image} alt={screen.alt} widths={[354, 531, 708]} sizes="(min-width: 900px) 22vw, 58vw" />
+              </figure>
+              <h3 class="line line--small">
+                {screen.line[0]} {screen.line[1] && <i>{screen.line[1]}</i>}
+              </h3>
+              <p class="text muted">{screen.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--black closing on-dark">
+    <div class="wrap">
+      <Image
+        class="glass"
+        src={glassSeed}
+        alt="The neoQuad seed as twelve glass petals, lit on black"
+        widths={[480, 800, 1200]}
+        sizes="(min-width: 900px) 520px, 78vw"
+        data-reveal
+      />
+      <h2 class="line line--section" data-reveal>Built by students. <i>For students.</i></h2>
+      <div class="closing-action" data-reveal style="--i:1">
+        <Action to="app" tone="accent" />
+        <span class="qr">
+          <a class="btn" href={links.appStore}>App Store</a>
+          <span class="qr-card" role="img" aria-label="QR code for neoQuad on the App Store" set:html={qr} />
+        </span>
+      </div>
+      <p class="elsewhere muted" data-reveal style="--i:2">
+        Free for every {campus.short} student. Somewhere else?{' '}
+        <a class="link" href={`mailto:${links.email}?subject=Bring%20neoQuad%20to%20my%20campus`}>Bring neoQuad to your campus.</a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* What it is */
+  .statement {
+    max-width: 17em;
+  }
+
+  .screens {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(78%, 340px);
+    gap: 16px;
+    margin: clamp(56px, 8vw, 112px) calc(-1 * var(--margin)) 0;
+    padding: 0 var(--margin);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--margin);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .screens::-webkit-scrollbar {
+    display: none;
+  }
+
+  .screen {
+    scroll-snap-align: start;
+  }
+
+  /* The whole phone, standing in its own quiet room. With a pointer, it rises a little to meet it. */
+  .screen-frame {
+    border-radius: var(--window-radius);
+    background: var(--mist);
+    padding: 9% 13% 8%;
+  }
+
+  .screen-frame img {
+    width: 100%;
+    filter: drop-shadow(0 28px 36px rgba(28, 28, 30, 0.16));
+    transition: transform 500ms var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .screen:hover .screen-frame img {
+      transform: translateY(-6px);
+    }
+  }
+
+  .screen h3 {
+    margin-top: 28px;
+  }
+
+  .screen p {
+    margin-top: 10px;
+    max-width: 26em;
+  }
+
+  @media (min-width: 900px) {
+    .screens {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(20px, 2.4vw, 32px);
+      margin-inline: 0;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .screen-frame img {
+      transition: none;
+    }
+  }
+
+  /* The glass seed: large, on black. */
+  .closing {
+    text-align: center;
+    padding-top: clamp(48px, 7vw, 96px);
+    padding-bottom: clamp(72px, 9vw, 128px);
+  }
+
+  .glass {
+    width: min(82vw, 560px);
+    margin: 0 auto clamp(8px, 2vw, 24px);
+  }
+
+  .closing-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: clamp(32px, 4vw, 48px);
+  }
+
+  /* On a computer, the phone is a scan away: the code opens from its button, and grows from it. */
+  .qr {
+    position: relative;
+    display: none;
+  }
+
+  .qr-card {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 14px);
+    z-index: 2;
+    width: 208px;
+    height: 208px;
+    padding: 20px;
+    border-radius: 28px;
+    background: var(--white);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    transform-origin: 50% -14px;
+    transform: translateX(-50%) scale(0.94);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 140ms ease-out,
+      transform 140ms var(--ease-out);
+  }
+
+  .qr-card :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .qr:focus-within .qr-card {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    transition-duration: 200ms;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (min-width: 900px) {
+    .qr {
+      display: block;
+    }
+
+    .qr:hover .qr-card {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+      transition-duration: 200ms;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qr-card {
+      transform: translateX(-50%);
+      transition: opacity 140ms ease-out;
+    }
+  }
+
+  .elsewhere {
+    margin-top: clamp(32px, 4vw, 48px);
+    font-size: 1rem;
+  }
+</style>

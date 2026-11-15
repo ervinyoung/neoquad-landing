@@ -1,0 +1,17 @@
+{
+  "name": "neoquad-landing",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource/ibm-plex-serif": "^5.3.0",
+    "astro": "^7.4.12",
+    "qrcode": "^1.5.4"
+  }
+}

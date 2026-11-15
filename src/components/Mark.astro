@@ -1,0 +1,69 @@
+---
+// The seed: the neoQuad mark. Twelve petals, drawn from the Logo Pack artwork.
+// `wave` plays the brand's Wave once on first arrival: petals appear in turn from the centre,
+// dim as the ripple passes, and return. Nothing moves.
+import seed from '../data/seed.json';
+
+interface Props {
+  wave?: boolean;
+  label?: string;
+  class?: string;
+  [attr: string]: unknown;
+}
+const { wave = false, label, class: className, ...rest } = Astro.props;
+---
+
+<svg
+  class:list={['mark', wave && 'mark--wave', className]}
+  viewBox={seed.viewBox.join(' ')}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  {...rest}
+>
+  {seed.petals.map((petal) => <path d={petal.d} style={`--step:${petal.step}`} />)}
+</svg>
+
+<style>
+  .mark {
+    overflow: visible;
+  }
+
+  .mark path {
+    fill: currentColor;
+  }
+
+  @keyframes wave-in {
+    0% {
+      opacity: 0;
+    }
+    30% {
+      opacity: 1;
+    }
+    62% {
+      opacity: 0.3;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes wave-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* First arrival only. The nav persists across pages and must not play again. */
+  :global(html[data-first]) .mark--wave path {
+    animation: wave-in 2200ms cubic-bezier(0.37, 0, 0.63, 1) both;
+    animation-delay: calc(140ms + var(--step) * 75ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html[data-first]) .mark--wave path {
+      animation: wave-fade 200ms ease both;
+      animation-delay: 0ms;
+    }
+  }
+</style>

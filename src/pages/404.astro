@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found. neoQuad" description="This page is not here.">
+  <section class="lost section section--black on-dark">
+    <div class="wrap">
+      <h1 class="line line--hero">New campus. <i>A little lost.</i></h1>
+      <p class="text muted">This page is not here. These are.</p>
+      <p class="lost-ways">
+        <a class="link" href="/">For students</a>
+        <a class="link" href="/schools">For schools</a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    display: grid;
+    align-items: end;
+    min-height: 82svh;
+    padding-top: 200px;
+  }
+
+  .lost .text {
+    margin-top: clamp(20px, 2.4vw, 32px);
+  }
+
+  .lost-ways {
+    display: flex;
+    gap: 32px;
+    margin-top: 28px;
+    font-size: 1.125rem;
+  }
+</style>

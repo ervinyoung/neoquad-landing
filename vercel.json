@@ -19,6 +19,21 @@
       "source": "/events",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/Privacy.html",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/Terms.html",
+      "destination": "/terms",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }

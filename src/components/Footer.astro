@@ -1,0 +1,131 @@
+---
+import Lockup from './Lockup.astro';
+import { links } from '../config';
+---
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <a class="footer-home" href="/" aria-label="neoQuad, home"><Lockup class="footer-lockup" /></a>
+      <ul class="footer-links">
+        <li><a href="/">Students</a></li>
+        <li><a href="/schools">Schools</a></li>
+        <li><a href={links.staff}>Staff sign in</a></li>
+        <li><a href={`mailto:${links.email}`}>{links.email}</a></li>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+      </ul>
+    </div>
+    <div class="footer-bottom">
+      <p class="pledge">
+        1% of all future net revenues will go to support the most effective solutions for the world’s most pressing
+        challenges.
+      </p>
+      <p>© 2026 neoQuad</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--black);
+    color: var(--white);
+    padding: clamp(56px, 8vw, 96px) var(--margin) calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .footer-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 40px 64px;
+  }
+
+  .footer-home {
+    display: block;
+    transition: opacity 160ms ease;
+  }
+
+  .footer-home:active {
+    opacity: 0.7;
+  }
+
+  .footer-lockup {
+    height: 40px;
+    width: auto;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 4px 56px;
+    font-size: 1rem;
+  }
+
+  .footer-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    color: var(--secondary-on-dark);
+    transition: color 160ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .footer-links a:hover {
+      color: var(--white);
+    }
+  }
+
+  .footer-links a:active {
+    color: var(--white);
+  }
+
+  .footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px 48px;
+    margin-top: clamp(56px, 8vw, 96px);
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #8e8e93;
+  }
+
+  .footer-bottom p:last-child {
+    white-space: nowrap;
+  }
+
+  /* The pledge: a band of light passes through the words while the pointer rests on them. */
+  .pledge {
+    max-width: 46ch;
+    background: linear-gradient(100deg, #8e8e93 0%, #8e8e93 42%, #ffffff 50%, #8e8e93 58%, #8e8e93 100%) 100% 0 / 280%
+      100% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: 0% 0;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .pledge:hover {
+      animation: shimmer 2200ms linear infinite;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pledge:hover {
+      animation: none;
+      -webkit-text-fill-color: #c7c7cc;
+    }
+  }
+</style>

@@ -8,10 +8,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>neoQuad — The operating system for campus life.</title>
-<meta name="description" content="A discovery layer between campus resources and the students who need them. Built for institutions. Loved by students. Launching at Santa Barbara City College.">
+<meta name="description" content="A discovery layer between campus resources and the students who need them. Built for institutions. Loved by students. Now at Santa Barbara City College.">
+<meta name="theme-color" content="#0E0E0E">
+<link rel="canonical" href="https://neoquadapp.com/">
+<link rel="icon" type="image/png" href="assets/logo-mark-dark.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="neoQuad">
+<meta property="og:url" content="https://neoquadapp.com/">
+<meta property="og:title" content="neoQuad — The operating system for campus life.">
+<meta property="og:description" content="Every official event, club, and building on one campus map. Built for institutions. Loved by students. Now at Santa Barbara City College.">
+<meta property="og:image" content="https://neoquadapp.com/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" as="image" href="assets/hero-coast.webp" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&amp;family=Source+Serif+4:ital,wght@1,400;1,500&amp;family=JetBrains+Mono:wght@400;500&amp;family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&amp;family=DM+Serif+Display:ital@1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script>try{if(sessionStorage.getItem("nqSeen"))document.documentElement.classList.add("nq-seen");sessionStorage.setItem("nqSeen","1")}catch(e){}</script>
 <style>
   :root{
     --black:#0E0E0E;
@@ -25,7 +39,7 @@
     --rule-cream:rgba(14,14,14,0.14);
     /* MOOD-DRIVEN ACCENT (overridden by JS) */
     --accent: oklch(0.58 0.19 256);
-    --accent-soft: rgba(82,127,217,0.18);
+    --accent-soft: oklch(0.58 0.19 256 / 0.18);
     --accent-glow: oklch(0.58 0.19 256 / 0.45);
     --accent-conic-1: oklch(0.72 0.16 256);
     --accent-conic-2: oklch(0.58 0.19 256);
@@ -34,10 +48,10 @@
     /* legacy alias — many rules still reference --blue */
     --blue: var(--accent);
     /* EDITORIAL — italics ratio scales display italic emphasis */
-    --italic-ratio: 1;
-    --display-scale: 1;
-    --rule-weight: 1px;
-    --mono-track: 0.06em;
+    --italic-ratio: 1.022;
+    --display-scale: 0.922;
+    --rule-weight: 0.91px;
+    --mono-track: 0.061em;
     /* SERIF FAMILY — swappable by mood */
     --serif-display: 'IBM Plex Serif', serif;
     --serif-italic: 'IBM Plex Serif', serif;
@@ -214,10 +228,10 @@
   .wm em{font-family:var(--serif-italic);font-style:italic;font-weight:400;letter-spacing:-0.015em}
   .wm-mark{
     width:30px;height:30px;flex:none;
-    background:url('assets/flower-of-life-white.png') center/contain no-repeat;
+    background:url('assets/flower-of-life-white.webp') center/contain no-repeat;
   }
   .cream .wm-mark{
-    background-image:url('assets/flower-of-life-dark.png');
+    background-image:url('assets/flower-of-life-dark.webp');
   }
 
   /* ============ HERO ============ */
@@ -232,7 +246,7 @@
   }
   .hero-img{
     position:absolute;inset:0;
-    background:url('assets/hero-coast.jpeg') center 35%/cover no-repeat;
+    background:url('assets/hero-coast.webp') center 35%/cover no-repeat;
     z-index:0;
   }
   .hero-img::after{
@@ -348,6 +362,35 @@
   .btn-ghost:hover{background:var(--cream);color:var(--black);border-color:var(--cream);transform:translateY(-1px)}
   .btn-ghost .arrow{display:inline-block;transition:transform .2s ease}
   .btn-ghost:hover .arrow{transform:translate(2px,0)}
+
+  .btn-blue{background:#1477e7;color:#fff;border-color:rgba(176,197,220,0.37)}
+  .btn-blue:hover{background:#2d86ec;color:#fff;box-shadow:0 6px 20px -8px rgba(20,119,231,0.6)}
+  .btn:active,.btn-ghost:active{transform:scale(0.98)}
+  .inst-cta{margin-top:40px;display:flex;align-items:center;gap:16px 28px;flex-wrap:wrap}
+  .inst-cta .text-link{font-size:15px;color:rgba(244,239,230,0.78);border-bottom:1px solid rgba(244,239,230,0.3);padding-bottom:2px}
+  .inst-cta .text-link:hover{color:#fff;border-color:#fff}
+  .contact .contact-next{font-size:16px;line-height:1.55;margin-top:16px;max-width:52ch;color:rgba(14,14,14,0.7)}
+  /* closing call to action */
+  #cta{padding-block:clamp(72px, 9vw, 120px);border-top:1px solid var(--rule-black)}
+  #cta .sec-h{max-width:16ch;margin-bottom:24px}
+  #cta .lead{margin-bottom:40px}
+  #cta .inst-cta{margin-top:0}
+  /* demo button inside the scroll pill */
+  .scroll-pill{padding:8px 8px 8px 26px}
+  .sp-cta{
+    margin-left:22px;flex:none;
+    display:inline-flex;align-items:center;gap:6px;
+    padding:9px 16px;border-radius:999px;
+    background:#1477e7;color:#fff;
+    font-size:13.5px;font-weight:500;letter-spacing:-0.005em;white-space:nowrap;
+    transition:background .2s ease, transform .15s ease;
+  }
+  .sp-cta:hover{background:#2d86ec}
+  .sp-cta:active{transform:scale(0.97)}
+  @media (max-width: 640px){
+    .scroll-pill{padding:6px 6px 6px 18px}
+    .sp-cta{margin-left:16px;padding:8px 13px;font-size:13px}
+  }
 
   /* SBCC wordmark band */
   #proof{
@@ -525,7 +568,7 @@
     right:0;
     width:min(25.5vw, 289px);
     height:min(30.6vw, 357px);
-    background:url('assets/institutions-portrait.png') right center / cover no-repeat;
+    background:url('assets/institutions-portrait.webp') right center / cover no-repeat;
     border-radius:18px;
     overflow:hidden;
     pointer-events:none;
@@ -851,7 +894,7 @@
   .ad-brand{display:flex; align-items:center; gap:10px; flex:none}
   .ad-mark{
     width:22px; height:22px; flex:none;
-    background:url('assets/flower-of-life-dark.png') center/contain no-repeat;
+    background:url('assets/flower-of-life-dark.webp') center/contain no-repeat;
     opacity:0.85;
   }
   .ad-title{font-size:14px; letter-spacing:-0.01em; color:var(--ink)}
@@ -1300,8 +1343,8 @@
     background-repeat:no-repeat;
     box-shadow:inset 0 0 0 2px var(--black);
   }
-  .founder .photo.j::before{background-image:url('assets/founder-jacob-circle.png')}
-  .founder .photo.e::before{background-image:url('assets/founder-ervin-circle.png')}
+  .founder .photo.j::before{background-image:url('assets/founder-jacob-circle.webp')}
+  .founder .photo.e::before{background-image:url('assets/founder-ervin-circle.webp')}
   .founder .name{font-size:24px;font-weight:500;letter-spacing:-0.02em;margin-bottom:4px}
   .founder .role{font-size:13px;font-family:'JetBrains Mono',monospace;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:18px}
   .founder p{font-size:15.5px;line-height:1.55;color:rgba(244,239,230,0.72)}
@@ -1309,7 +1352,7 @@
   /* ============ FOOTER (photo) ============ */
   footer{
     position:relative;isolation:isolate;
-    background:#0b0d12 url('assets/footer-bg.jpeg') center top/cover no-repeat;
+    background:#0b0d12 url('assets/footer-bg.webp') center top/cover no-repeat;
     color:#f4efe6;
     padding:80px var(--pad) 0;
     min-height:608px;
@@ -1516,7 +1559,7 @@
     background: var(--black);
     overflow:hidden;
     will-change:transform;
-    animation: nqLoaderSlideUp 0.85s cubic-bezier(0.76, 0, 0.24, 1) 1.85s forwards;
+    animation: nqLoaderSlideUp 0.7s cubic-bezier(0.76, 0, 0.24, 1) 0.9s forwards;
   }
   .nq-loader::before{
     content:""; position:absolute; inset:0;
@@ -1534,7 +1577,7 @@
     position:absolute;
     width: clamp(160px, 22vw, 280px);
     height: clamp(160px, 22vw, 280px);
-    background:url('assets/flower-of-life-white.png') center/contain no-repeat;
+    background:url('assets/flower-of-life-white.webp') center/contain no-repeat;
     opacity:0;
     will-change: transform, opacity;
     /* Each flower lands at its own offset around the center —
@@ -1551,18 +1594,18 @@
      We chain them as separate animations on the same element. */
   .nq-flower--1{
     animation:
-      nqFlowerInLeft 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0s forwards,
-      nqFlowerOutLeft 1.15s cubic-bezier(0.33, 0, 0.67, 1) 1.55s forwards;
+      nqFlowerInLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0s forwards,
+      nqFlowerOutLeft 1.15s cubic-bezier(0.33, 0, 0.67, 1) 0.78s forwards;
   }
   .nq-flower--2{
     animation:
-      nqFlowerInRight 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.42s forwards,
-      nqFlowerOutRight 1.15s cubic-bezier(0.33, 0, 0.67, 1) 1.55s forwards;
+      nqFlowerInRight 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.14s forwards,
+      nqFlowerOutRight 1.15s cubic-bezier(0.33, 0, 0.67, 1) 0.78s forwards;
   }
   .nq-flower--3{
     animation:
-      nqFlowerInTop 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards,
-      nqFlowerOutTop 1.15s cubic-bezier(0.33, 0, 0.67, 1) 1.55s forwards;
+      nqFlowerInTop 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.28s forwards,
+      nqFlowerOutTop 1.15s cubic-bezier(0.33, 0, 0.67, 1) 0.78s forwards;
   }
 
   @keyframes nqFlowerInLeft{
@@ -1605,21 +1648,27 @@
     opacity:0;
     transform: translateY(14px);
     will-change: opacity, transform;
-    animation: nqHeroIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: nqHeroIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
-  .hero-h    { animation-delay: 2.45s }
-  .hero-sub  { animation-delay: 2.70s }
-  .cta-row   { animation-delay: 2.92s }
+  .hero-h    { animation-delay: 1.10s }
+  .hero-sub  { animation-delay: 1.22s }
+  .cta-row   { animation-delay: 1.34s }
+  /* Later views in the same session: no loader, hero arrives at once. */
+  .nq-seen .nq-loader{ display:none }
+  .nq-seen .hero-h    { animation-delay: 0.05s }
+  .nq-seen .hero-sub  { animation-delay: 0.14s }
+  .nq-seen .cta-row   { animation-delay: 0.23s }
   @keyframes nqHeroIn{
     to{ opacity:1; transform: translateY(0) }
   }
   @media (prefers-reduced-motion: reduce){
     .hero-h, .hero-sub, .cta-row{
       animation-duration: 0.3s;
-      animation-delay: 1.4s;
+      animation-delay: 0.9s;
     }
   }
   .nq-loader.is-done{ display:none }
+  @media (prefers-reduced-motion: reduce){ .nq-seen .hero-h, .nq-seen .hero-sub, .nq-seen .cta-row{ animation-delay: 0s } }
   @media (prefers-reduced-motion: reduce){
     .nq-loader{ animation-delay: 0.6s; animation-duration: 0.4s }
     .nq-flower--1, .nq-flower--2, .nq-flower--3{
@@ -1628,7 +1677,7 @@
   }
 </style>
 </head>
-<body>
+<body data-texture="clean">
 
 <!-- ====================== LOADING SCREEN ====================== -->
 <div class="nq-loader" id="nqLoader" aria-hidden="true">
@@ -1676,15 +1725,15 @@
         <h1 class="hero-h">The operating system for 
 campus life.
 </h1>
-        <p class="hero-sub">A discovery layer between campus resources and the students<br>
-who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Loved by students.</span>
+        <p class="hero-sub">A discovery layer between campus resources and the students who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Loved by students.</span>
 
 </p>
         <div class="cta-row">
           <span class="cta-discover">
             <a href="https://events.neoquadapp.com/" class="btn">Discover Events <span class="arrow">→</span></a>
-            <img class="sticky-note" src="assets/sticky-free.png" alt="" aria-hidden="true" width="62" height="65">
+            <img class="sticky-note" src="assets/sticky-free.webp" alt="" aria-hidden="true" width="62" height="65">
           </span>
+          <a href="https://forms.fillout.com/t/29rxfuvnNwus" class="btn-ghost" target="_blank" rel="noopener">For colleges: book a demo <span class="arrow">→</span></a>
         </div>
       </div>
     </div>
@@ -1731,6 +1780,7 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
     <button class="sp-item" data-target="why"><span class="dot-mark"></span><span class="lbl">Why This Matters</span></button>
     <button class="sp-item" data-target="team"><span class="dot-mark"></span><span class="lbl">The Team</span></button>
   </div>
+  <a class="sp-cta" href="https://forms.fillout.com/t/29rxfuvnNwus" target="_blank" rel="noopener">Book a demo</a>
 </div>
 
 <!-- ====================== PRODUCT (black) ====================== -->
@@ -1749,24 +1799,24 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
     <!-- phones -->
     <div class="phones">
       <figure class="screen">
-        <img src="assets/screen-home.png" alt="Home — campus map with live events" />
+        <img src="assets/screen-home.webp" alt="Home — campus map with live events" width="708" height="1400" loading="lazy" decoding="async">
         <figcaption>Home</figcaption>
       </figure>
       <figure class="screen">
-        <img src="assets/screen-buildings.png" alt="Buildings directory with detail card" />
+        <img src="assets/screen-buildings.webp" alt="Buildings directory with detail card" width="708" height="1400" loading="lazy" decoding="async">
         <figcaption>Find any building fast</figcaption>
       </figure>
       <figure class="screen">
-        <img src="assets/screen-clubs.png" alt="Clubs directory" />
+        <img src="assets/screen-clubs.webp" alt="Clubs directory" width="708" height="1400" loading="lazy" decoding="async">
         <figcaption>Browse every club</figcaption>
       </figure>
       <figure class="screen">
-        <img src="assets/screen-club-detail.png" alt="Club detail page — SBCC ASG" />
+        <img src="assets/screen-club-detail.webp" alt="Club detail page — SBCC ASG" width="708" height="1400" loading="lazy" decoding="async">
         <figcaption>Browse every event</figcaption>
       </figure>
     </div>
 
-    <div class="appstore">
+    <div class="product-cta">
       <a href="https://events.neoquadapp.com/" class="btn-ghost js-discover">Discover Events <span class="arrow">→</span></a>
       <span class="as-note">Free for students · iOS + web</span>
     </div>
@@ -1786,6 +1836,11 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
     <h2 class="sec-h">For the students you're already <span class="of">trying</span> to reach.</h2>
 
     <p class="lead">neoQuad is the discovery layer between campus resources and the students who need them. We are now officially partnered with Santa Barbara City College as our founding institution, one of the most equity-driven community colleges in the country, to demonstrate measurable lift in event attendance, club engagement, and first-year persistence.</p>
+
+    <div class="inst-cta">
+      <a class="btn btn-blue" href="https://forms.fillout.com/t/29rxfuvnNwus" target="_blank" rel="noopener">Demo with Founder <span class="arrow">→</span></a>
+      <a class="text-link" href="#dashReveal">Preview the admin dashboard ↓</a>
+    </div>
 
     <!-- pillars -->
     <div class="pillars">
@@ -2143,6 +2198,7 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
       <div>
         <h3 class="subh" style="margin-bottom:24px">Want to chat?</h3>
         <p class="lead" style="font-size:18px">We're in active conversations with administrators across the California Community College system. If you'd like to add yours to the list, drop a note.</p>
+        <p class="contact-next">A founder walks you through the student app and the admin dashboard, and answers your IT and compliance questions directly.</p>
       </div>
       <form class="contact-form" onsubmit="event.preventDefault();" style="grid-template-columns:1fr;gap:28px">
         <div class="form-actions" style="grid-column:1; padding-top:28px; display:flex; flex-direction:column; align-items:flex-start; gap:24px">
@@ -2222,6 +2278,19 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
   </div>
 </section>
 
+<!-- ====================== CLOSING CTA (black) ====================== -->
+<section class="black" id="cta" data-screen-label="06 Demo">
+  <div class="tex-overlay" aria-hidden="true"></div>
+  <div class="wrap">
+    <h2 class="sec-h">Bring neoQuad to <span class="of">your</span> campus.</h2>
+    <p class="lead">No SIS, LMS, or ERP integration required. Free for students.</p>
+    <div class="inst-cta">
+      <a class="btn btn-blue" href="https://forms.fillout.com/t/29rxfuvnNwus" target="_blank" rel="noopener">Demo with Founder <span class="arrow">→</span></a>
+      <a class="text-link" href="mailto:hello@neoquadapp.com">hello@neoquadapp.com</a>
+    </div>
+  </div>
+</section>
+
 <!-- ====================== FOOTER ====================== -->
 <footer data-screen-label="06 Footer">
   <div class="tex-overlay" aria-hidden="true"></div>
@@ -2253,7 +2322,7 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // Shimmer the 1% pledge once when it scrolls into view, and again on hover.
 (function(){
   const pledge = document.querySelector('.pledge');
@@ -2393,9 +2462,29 @@ who need them. <span style="color: rgb(45, 134, 236)">Built for institutions. Lo
 
 <!-- ====================== TWEAKS ====================== -->
 <div id="tweaks-root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<!-- The Tweaks panel is a design tool, never shown to visitors. Its React + Babel stack
+     (about 3 MB) now loads only inside the design editor (framed) or with ?tweaks in the URL. -->
+<script>
+(function(){
+  var framed = window.parent !== window, asked = /[?&]tweaks\b/.test(location.search);
+  if (!framed && !asked) return;
+  var f = document.createElement('link'); f.rel = 'stylesheet';
+  f.href = 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&family=DM+Serif+Display:ital@1&display=swap';
+  document.head.appendChild(f);
+  var libs = [
+    ['https://unpkg.com/react@18.3.1/umd/react.development.js', 'sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L'],
+    ['https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js', 'sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm'],
+    ['https://unpkg.com/@babel/standalone@7.29.0/babel.min.js', 'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y']
+  ];
+  (function next(i){
+    if (i >= libs.length){ if (window.Babel) window.Babel.transformScriptTags(); return; }
+    var el = document.createElement('script');
+    el.src = libs[i][0]; el.integrity = libs[i][1]; el.crossOrigin = 'anonymous';
+    el.onload = function(){ next(i + 1); };
+    document.body.appendChild(el);
+  })(0);
+})();
+</script>
 <script type="text/babel" src="tweaks-panel.jsx"></script>
 <script type="text/babel">
   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{

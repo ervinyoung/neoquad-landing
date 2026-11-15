@@ -1,0 +1,47 @@
+---
+// The page's one action, as a Liquid Glass button. Say where it goes; it knows the rest.
+//
+//   to="app"      Students. On an iPhone it opens the App Store, everywhere else the web app.
+//   to="booking"  Schools. Opens the founder booking form.
+//
+//   tone="clear"   plain glass, for the first screen
+//   tone="accent"  glass tinted with the accent, for everything after it
+//   compact        a shorter button with a one-word label on small screens (for the nav)
+import { links } from '../config';
+
+interface Props {
+  to: 'app' | 'booking';
+  tone?: 'clear' | 'accent';
+  compact?: boolean;
+  class?: string;
+  [attr: string]: unknown;
+}
+const { to, tone = 'clear', compact = false, class: className, ...rest } = Astro.props;
+
+const variants = {
+  app: [
+    { href: links.events, label: 'Open neoQuad', short: 'Open', when: 'cta-web' },
+    { href: links.appStore, label: 'Get neoQuad', short: 'Get', when: 'cta-ios' },
+  ],
+  booking: [{ href: links.booking, label: 'Book with a founder', short: 'Book', when: null }],
+}[to];
+---
+
+{
+  variants.map((v) => (
+    <a
+      class:list={['btn', tone === 'accent' && 'btn--accent', compact && 'btn--compact', v.when, className]}
+      href={v.href}
+      {...rest}
+    >
+      {compact ? (
+        <>
+          <span class="btn-short">{v.short}</span>
+          <span class="btn-long">{v.label}</span>
+        </>
+      ) : (
+        v.label
+      )}
+    </a>
+  ))
+}

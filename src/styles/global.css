@@ -1,0 +1,528 @@
+/* neoQuad landing. Values come from Brand Guidelines 2.1 (tokens.json). */
+
+@import '@fontsource/ibm-plex-serif/500.css';
+@import '@fontsource/ibm-plex-serif/500-italic.css';
+@import '@fontsource-variable/geist';
+
+:root {
+  /* Color: black, white and the light of the photographs. */
+  --black: #000000;
+  --white: #ffffff;
+  --graphite: #1c1c1e;
+  --mist: #f3f2ef;
+  --rule: #dedcd7;
+  --secondary: #6e6e73;
+  --secondary-on-dark: #a1a1a6;
+
+  /* The one accent: neoQuad blue. It marks the action, and only below the first screen. */
+  --accent: #1477e7;
+  --accent-bright: #2d86ec;
+  --accent-rgb: 20, 119, 231;
+
+  /* Type */
+  --serif: 'IBM Plex Serif', Georgia, serif;
+  --sans: 'Geist Variable', ui-sans-serif, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+
+  /* Layout */
+  --margin: clamp(20px, 5.2vw, 80px);
+  --gutter: clamp(8px, 1.2vw, 16px);
+  --window-radius: clamp(22px, 4.2vmin, 40px);
+  --section: clamp(88px, 13vw, 184px);
+  --measure: 1240px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--black);
+  scroll-padding-top: 112px;
+}
+
+body {
+  margin: 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+}
+
+h1,
+h2,
+h3,
+p,
+figure,
+dl,
+dd,
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a,
+button {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgba(var(--accent-rgb), 0.28);
+}
+
+/* ---------- Type ---------- */
+
+/* The line: IBM Plex Serif Medium. Italic is for the second thought. */
+.line {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.line i,
+.line em {
+  font-style: italic;
+  letter-spacing: -0.025em;
+}
+
+.line--hero {
+  font-size: clamp(2.75rem, 1.4rem + 6.2vw, 6.75rem);
+}
+
+.line--section {
+  font-size: clamp(2.125rem, 1.35rem + 3.4vw, 4.25rem);
+  line-height: 1.06;
+}
+
+.line--small {
+  font-size: clamp(1.5rem, 1.25rem + 0.9vw, 2rem);
+  line-height: 1.12;
+}
+
+.text {
+  font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.muted {
+  color: var(--secondary);
+}
+
+.on-dark .muted {
+  color: var(--secondary-on-dark);
+}
+
+/* A text link: the underline is drawn in from the left on hover. */
+.link {
+  background:
+    linear-gradient(currentColor, currentColor) 0 100% / var(--drawn, 0%) 1px no-repeat,
+    linear-gradient(
+        color-mix(in srgb, currentColor 34%, transparent),
+        color-mix(in srgb, currentColor 34%, transparent)
+      )
+      0 100% / 100% 1px no-repeat;
+  padding-bottom: 0.12em;
+  transition: background-size 320ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    --drawn: 100%;
+  }
+}
+
+/* ---------- Layout ---------- */
+
+.section {
+  padding: var(--section) var(--margin);
+}
+
+.section--white {
+  background: var(--white);
+  color: var(--graphite);
+}
+
+.section--mist {
+  background: var(--mist);
+  color: var(--graphite);
+}
+
+.section--black {
+  background: var(--black);
+  color: var(--white);
+}
+
+.wrap {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+/* ---------- Button: Liquid Glass ----------
+   Clear glass by default; --accent tints it. The glass bends the light of whatever is behind it
+   (backdrop blur and saturation), carries a bright rim along the top and a faint one below, and
+   has a specular highlight that follows the pointer. Pressing it sinks it. */
+
+.btn {
+  --glass-top: rgba(255, 255, 255, 0.5);
+  --glass-bottom: rgba(255, 255, 255, 0.24);
+  --glass-rim: rgba(255, 255, 255, 0.85);
+  --glass-shadow: rgba(0, 0, 0, 0.24);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 28px;
+  border-radius: 999px;
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.16);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
+  -webkit-backdrop-filter: blur(20px) saturate(1.9) brightness(1.3);
+  backdrop-filter: blur(20px) saturate(1.9) brightness(1.3);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -14px 20px -16px rgba(255, 255, 255, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    0 12px 32px -6px var(--glass-shadow);
+  transition:
+    transform 160ms var(--ease-out),
+    box-shadow 200ms ease;
+}
+
+/* The specular highlight. --gx / --gy are set from the pointer by scripts/glass.ts. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    140px 90px at var(--gx, 50%) var(--gy, 0%),
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0) 70%
+  );
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn--accent {
+  --glass-top: rgba(var(--accent-rgb), 0.78);
+  --glass-bottom: rgba(var(--accent-rgb), 0.92);
+  --glass-rim: rgba(255, 255, 255, 0.5);
+  --glass-shadow: rgba(var(--accent-rgb), 0.55);
+}
+
+.btn--compact {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 0.9375rem;
+}
+
+.btn--compact .btn-long {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .btn--compact .btn-short {
+    display: none;
+  }
+  .btn--compact .btn-long {
+    display: inline;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Students get the App Store on an iPhone and the web app everywhere else.
+   The flag is set in <head>, so the right one is there from the first paint. */
+.cta-ios {
+  display: none;
+}
+
+html[data-ios] .cta-ios {
+  display: inline-flex;
+}
+
+html[data-ios] .cta-web {
+  display: none;
+}
+
+/* ---------- The window: a photograph in a rounded frame ---------- */
+
+.window {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--window-radius);
+  background: var(--graphite);
+  isolation: isolate;
+}
+
+.window > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* ---------- Scroll reveal: once, quiet ---------- */
+
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 800ms var(--ease-out),
+    transform 800ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+html.js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Entering a page ----------
+   html[data-enter] is set on first load and again after every page switch, so a hero always
+   arrives the same way: its headline a word at a time, each rising out of a blur, then its action. */
+
+.word {
+  display: inline-block;
+}
+
+@keyframes word-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.42em);
+    filter: blur(14px);
+  }
+}
+
+html[data-enter] .word {
+  animation: word-in 1200ms var(--ease-out) both;
+  animation-delay: calc(320ms + var(--w) * 85ms);
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+html[data-enter] [data-arrive] {
+  animation: arrive 1000ms var(--ease-out) both;
+  animation-delay: var(--d, 240ms);
+}
+
+/* After a switch the photograph is already there, so the words can start sooner. */
+html[data-enter='switch'] .word {
+  animation-delay: calc(180ms + var(--w) * 70ms);
+}
+
+html[data-enter='switch'] [data-arrive] {
+  animation-delay: calc(var(--d, 240ms) - 260ms);
+}
+
+/* ---------- Students <-> Schools ----------
+   The same coast in a different light. Three things happen together:
+   1. The photograph pulls focus: the old light blurs away as the new one resolves.
+   2. The words leave toward the side you came from (--dir), and the new ones arrive word by word.
+   3. The rest of the page dissolves underneath. The nav does not move: it is the same object. */
+
+html {
+  --dir: 1;
+}
+
+html[data-dir='back'] {
+  --dir: -1;
+}
+
+@keyframes coast-out {
+  to {
+    opacity: 0;
+    filter: blur(22px);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes coast-in {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(1.05);
+  }
+}
+
+::view-transition-group(coast) {
+  border-radius: var(--window-radius);
+  overflow: hidden;
+  animation-duration: 900ms;
+  animation-timing-function: var(--ease-glass);
+}
+
+::view-transition-old(coast),
+::view-transition-new(coast) {
+  height: 100%;
+  object-fit: cover;
+  animation-duration: 900ms;
+  animation-timing-function: var(--ease-glass);
+  animation-fill-mode: both;
+}
+
+::view-transition-old(coast) {
+  animation-name: coast-out;
+}
+
+::view-transition-new(coast) {
+  animation-name: coast-in;
+}
+
+@keyframes copy-out {
+  to {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateX(calc(var(--dir) * -36px));
+  }
+}
+
+::view-transition-group(hero-copy) {
+  animation-duration: 600ms;
+  animation-timing-function: var(--ease-glass);
+}
+
+::view-transition-old(hero-copy) {
+  animation: copy-out 340ms var(--ease-out) both;
+}
+
+::view-transition-new(hero-copy) {
+  animation: none;
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+}
+
+::view-transition-old(root) {
+  animation: page-out 240ms ease both;
+}
+
+::view-transition-new(root) {
+  animation: page-in 420ms ease 120ms both;
+}
+
+::view-transition-old(nav),
+::view-transition-new(nav) {
+  animation: none;
+}
+
+::view-transition-old(nav) {
+  display: none;
+}
+
+/* ---------- Reduced motion: fewer and gentler, not none ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-reveal] {
+    transform: none;
+    transition: opacity 300ms ease;
+    transition-delay: 0ms;
+  }
+
+  html[data-enter] [data-arrive],
+  html[data-enter] .word {
+    animation: none;
+  }
+
+  .link {
+    transition: none;
+  }
+
+  ::view-transition-group(coast),
+  ::view-transition-group(hero-copy) {
+    animation-duration: 0s;
+  }
+
+  ::view-transition-old(coast),
+  ::view-transition-new(coast),
+  ::view-transition-old(hero-copy) {
+    animation: none;
+  }
+
+  ::view-transition-old(hero-copy) {
+    display: none;
+  }
+}

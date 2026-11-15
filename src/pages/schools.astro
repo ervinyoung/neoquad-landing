@@ -1,0 +1,392 @@
+---
+// Schools: the case, the proof, the dashboard, the answers for IT, and one way in.
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Dashboard from '../components/Dashboard.astro';
+import Hero from '../components/Hero.astro';
+import Action from '../components/Action.astro';
+import Mark from '../components/Mark.astro';
+import { links, campus } from '../config';
+
+import duskBlur from '../assets/photos/dusk-blur.jpg';
+import sbccMark from '../assets/logo/sbcc-black.svg';
+import ervin from '../assets/people/founder-ervin.jpg';
+import jacob from '../assets/people/founder-jacob.jpg';
+
+const stats = [
+  { value: '36%', label: `of ${campus.short} students are first-generation.`, source: 'SBCC Student Equity Plan' },
+  {
+    value: '42%',
+    label: 'of community college dropouts are first-generation or low-income.',
+    source: 'CCCCO Student Success Metrics',
+  },
+  {
+    value: '86%',
+    label: 'of students have skipped an event because they had no one to go with.',
+    source: 'neoQuad primary research, n = 58',
+  },
+];
+
+const points = [
+  {
+    line: 'Every student sees it.',
+    text: 'Each official event, club and resource reaches every student the moment they open the app. No account to follow, no inbox to dig through.',
+  },
+  {
+    line: 'Easier to go alone.',
+    text: 'The students who skip events because they have no one to go with are often the ones without a campus network. neoQuad lowers the cost of showing up alone.',
+  },
+  {
+    line: 'See what students show up for.',
+    text: 'Counts only, in groups of twelve or more. You learn what is working without watching any one student.',
+  },
+];
+
+const answers = [
+  ['No data sales.', 'We never sell, rent or trade student data to anyone.'],
+  ['No location tracking.', 'Location is not used, not asked for and never stored.'],
+  ['Nothing to integrate.', 'No SIS, LMS or ERP connection. We integrate with nothing.'],
+  ['Your data stays yours.', 'Your campus owns every event it publishes.'],
+  ['FERPA-aligned.', 'We do not access, store or request any FERPA-protected record.'],
+  ['COPPA-compliant.', 'Distributed through the App Store, age-rated 4+.'],
+  ['Encrypted.', 'AES-256 at rest, TLS 1.2+ in transit. Server-side rules keep each school’s data separate.'],
+  ['Four data points.', 'Email, display name, optional year, major and photo, and RSVPs. That is all we collect from a student.'],
+];
+
+const founders = [
+  {
+    image: jacob,
+    name: 'Jacob Sola',
+    role: 'Co-founder, CEO',
+    text: 'An engineer at RTX. He studied at College of the Canyons and UC Riverside, and started neoQuad to build what he wished he had as a community college student.',
+  },
+  {
+    image: ervin,
+    name: 'Ervin Young',
+    role: 'Co-founder, CPO',
+    text: 'An engineer at Tesla. He attended Las Positas College and Virginia Tech, a path that shapes every product decision we make.',
+  },
+];
+---
+
+<Base
+  audience="schools"
+  title="neoQuad for schools. For the students you’re already trying to reach."
+  description={`neoQuad puts every official event, club and building in one app, so students find what your college already offers. Founding partner: ${campus.name}.`}
+>
+  <Hero scene="blue-hour" calm line={['For the students you’re already', { i: 'trying' }, 'to reach.']}>
+    <Action to="booking" />
+  </Hero>
+
+  <section class="section section--white">
+    <div class="wrap">
+      <h2 class="line line--section why" data-reveal>
+        Students don’t leave at orientation. <i>They leave one skipped event at a time.</i>
+      </h2>
+      <ul class="stats">
+        {
+          stats.map((stat, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <p class="line stat-value">{stat.value}</p>
+              <p class="text">{stat.label}</p>
+              <p class="source muted">{stat.source}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--mist partner">
+    <div class="wrap">
+      <div class="campus-lockup" data-reveal>
+        <Mark label="neoQuad" />
+        <span class="campus-rule"></span>
+        <img src={sbccMark.src} alt={campus.name} width={sbccMark.width} height={sbccMark.height} />
+      </div>
+      <p class="line line--section" data-reveal style="--i:1">
+        {campus.name} is <i>our founding partner.</i>
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="wrap">
+      <div class="dash-head">
+        <h2 class="line line--section" data-reveal>One place to publish. <i>One place to see what works.</i></h2>
+        <p class="text muted" data-reveal style="--i:1">
+          neoQuad puts every official event, club and building in one app, so students find what your college already
+          offers.
+        </p>
+      </div>
+      <div data-reveal style="--i:1"><Dashboard /></div>
+      <ul class="points">
+        {
+          points.map((point, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <h3 class="line line--small">{point.line}</h3>
+              <p class="text muted">{point.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--mist">
+    <div class="wrap it">
+      <h2 class="line line--section" data-reveal>What to tell your <i>IT director.</i></h2>
+      <dl class="answers">
+        {
+          answers.map(([term, detail], i) => (
+            <div data-reveal style={`--i:${i % 2}`}>
+              <dt>{term}</dt>
+              <dd class="muted">{detail}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="section section--white">
+    <div class="wrap">
+      <h2 class="line line--section founders-title" data-reveal>
+        Two engineers. <i>Both former community college students.</i>
+      </h2>
+      <ul class="founders">
+        {
+          founders.map((founder, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <span class="portrait">
+                <Image src={founder.image} alt={founder.name} widths={[240, 480]} sizes="120px" />
+              </span>
+              <div>
+                <h3 class="line line--small">{founder.name}</h3>
+                <p class="role muted">{founder.role}</p>
+                <p class="text muted">{founder.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="closing on-dark">
+    <div class="window closing-window">
+      <Image src={duskBlur} alt="" widths={[750, 1200, 1920]} sizes="100vw" quality={70} />
+      <h2 class="line line--hero" data-reveal>Bring neoQuad to <i>your campus.</i></h2>
+      <div class="closing-cta" data-reveal style="--i:1">
+        <Action to="booking" tone="accent" />
+        <a class="link" href={`mailto:${links.email}`}>{links.email}</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Why */
+  .why {
+    max-width: 16em;
+  }
+
+  .stats {
+    display: grid;
+    gap: 48px clamp(24px, 4vw, 64px);
+    margin-top: clamp(56px, 8vw, 112px);
+  }
+
+  .stat-value {
+    font-size: clamp(4rem, 2.6rem + 6vw, 7.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    margin-bottom: 20px;
+  }
+
+  .stats .text {
+    max-width: 19em;
+  }
+
+  .source {
+    margin-top: 12px;
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 820px) {
+    .stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* Founding partner */
+  .partner {
+    text-align: center;
+  }
+
+  .campus-lockup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(20px, 3vw, 36px);
+    margin-bottom: clamp(36px, 5vw, 64px);
+    color: var(--black);
+  }
+
+  .campus-lockup :global(svg),
+  .campus-lockup img {
+    height: clamp(64px, 8vw, 96px);
+    width: auto;
+  }
+
+  .campus-rule {
+    width: 1px;
+    height: clamp(64px, 8vw, 96px);
+    background: #c9c8c4;
+  }
+
+  .partner .line {
+    max-width: 15em;
+    margin-inline: auto;
+  }
+
+  /* Dashboard */
+  .dash-head {
+    display: grid;
+    gap: 24px clamp(32px, 6vw, 96px);
+    align-items: end;
+    margin-bottom: clamp(40px, 6vw, 72px);
+  }
+
+  .dash-head .text {
+    max-width: 26em;
+  }
+
+  @media (min-width: 900px) {
+    .dash-head {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  .points {
+    display: grid;
+    gap: 40px clamp(24px, 4vw, 64px);
+    margin-top: clamp(56px, 8vw, 104px);
+  }
+
+  .points .text {
+    margin-top: 12px;
+    max-width: 24em;
+  }
+
+  @media (min-width: 820px) {
+    .points {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* IT */
+  .answers {
+    display: grid;
+    margin-top: clamp(48px, 7vw, 96px);
+    column-gap: clamp(32px, 6vw, 96px);
+  }
+
+  .answers > div {
+    padding: 22px 0 24px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .answers dt {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .answers dd {
+    margin-top: 6px;
+    font-size: 1.0625rem;
+    max-width: 30em;
+    text-wrap: pretty;
+  }
+
+  @media (min-width: 820px) {
+    .answers {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* Founders */
+  .founders-title {
+    max-width: 14em;
+  }
+
+  .founders {
+    display: grid;
+    gap: 48px clamp(32px, 6vw, 96px);
+    margin-top: clamp(56px, 8vw, 104px);
+  }
+
+  .founders li {
+    display: flex;
+    gap: clamp(20px, 2.4vw, 32px);
+    align-items: flex-start;
+  }
+
+  .portrait {
+    flex: none;
+    width: clamp(88px, 10vw, 120px);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 50%;
+  }
+
+  .portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .role {
+    margin-top: 6px;
+    font-size: 0.9375rem;
+  }
+
+  .founders .text {
+    margin-top: 14px;
+    max-width: 26em;
+  }
+
+  @media (min-width: 820px) {
+    .founders {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* Closing */
+  .closing {
+    padding: var(--gutter);
+    background: var(--black);
+  }
+
+  .closing-window {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: min(86svh, 820px);
+    padding: var(--margin);
+    padding-bottom: clamp(72px, 11vw, 150px);
+    text-align: center;
+  }
+
+  .closing-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    margin-top: clamp(32px, 4vw, 56px);
+  }
+</style>

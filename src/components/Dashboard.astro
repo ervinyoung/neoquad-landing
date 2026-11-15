@@ -1,0 +1,215 @@
+---
+// The staff dashboard, as it is today: real screens, switched by tabs.
+import { Image } from 'astro:assets';
+import insights from '../assets/dashboard/insights.png';
+import events from '../assets/dashboard/events.png';
+import newEvent from '../assets/dashboard/new-event.png';
+
+const views = [
+  { key: 'insights', label: 'Insights', image: insights, alt: 'Insights: students involved, RSVPs, first-timers and a map of where events are' },
+  { key: 'events', label: 'Events', image: events, alt: 'Events: a month calendar of every approved event' },
+  { key: 'new-event', label: 'New event', image: newEvent, alt: 'New event: a short form for title, organization, date and place' },
+];
+---
+
+<div class="dash" data-dash data-active={views[0].key}>
+  <div class="dash-tabs" role="tablist" aria-label="Dashboard screens" style={`--count:${views.length}`}>
+    {
+      views.map((view, i) => (
+        <button
+          role="tab"
+          type="button"
+          id={`dash-tab-${view.key}`}
+          aria-controls={`dash-panel-${view.key}`}
+          aria-selected={i === 0 ? 'true' : 'false'}
+          tabindex={i === 0 ? 0 : -1}
+          data-key={view.key}
+          data-index={i}
+        >
+          {view.label}
+        </button>
+      ))
+    }
+    <span class="dash-pill" aria-hidden="true">{views.map((view) => <span>{view.label}</span>)}</span>
+  </div>
+
+  <div class="dash-stage">
+    <div class="dash-track">
+    {
+      views.map((view, i) => (
+        <div
+          class="dash-panel"
+          role="tabpanel"
+          id={`dash-panel-${view.key}`}
+          aria-labelledby={`dash-tab-${view.key}`}
+          data-key={view.key}
+          data-current={i === 0 ? '' : undefined}
+          aria-hidden={i === 0 ? 'false' : 'true'}
+        >
+          <Image
+            src={view.image}
+            alt={view.alt}
+            widths={[720, 1100, 1862]}
+            sizes="(min-width: 1320px) 1240px, 92vw"
+            loading="lazy"
+          />
+        </div>
+      ))
+    }
+    </div>
+  </div>
+</div>
+
+<script>
+  const init = () => {
+    document.querySelectorAll<HTMLElement>('[data-dash]:not([data-ready])').forEach((dash) => {
+      dash.dataset.ready = '';
+      const tabs = [...dash.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      const panels = [...dash.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
+      const list = dash.querySelector<HTMLElement>('.dash-tabs')!;
+
+      const select = (tab: HTMLButtonElement, focus = false) => {
+        const key = tab.dataset.key!;
+        list.style.setProperty('--index', tab.dataset.index!);
+        tabs.forEach((t) => {
+          const on = t === tab;
+          t.setAttribute('aria-selected', String(on));
+          t.tabIndex = on ? 0 : -1;
+        });
+        panels.forEach((p) => {
+          const on = p.dataset.key === key;
+          p.toggleAttribute('data-current', on);
+          p.setAttribute('aria-hidden', String(!on));
+        });
+        if (focus) tab.focus();
+      };
+
+      tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => select(tab));
+        tab.addEventListener('keydown', (event) => {
+          const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+          if (!step) return;
+          event.preventDefault();
+          select(tabs[(i + step + tabs.length) % tabs.length], true);
+        });
+      });
+    });
+  };
+
+  document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+  .dash-tabs {
+    --index: 0;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--count), 1fr);
+    width: fit-content;
+    height: 48px;
+    margin-inline: auto;
+    border-radius: 999px;
+    background: var(--mist);
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .dash-tabs button,
+  .dash-pill span {
+    display: grid;
+    place-items: center;
+    padding: 0 clamp(14px, 3.6vw, 26px);
+    white-space: nowrap;
+  }
+
+  .dash-tabs button {
+    appearance: none;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--secondary);
+    font: inherit;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .dash-pill {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(var(--count), 1fr);
+    border-radius: 999px;
+    background: var(--graphite);
+    color: var(--white);
+    pointer-events: none;
+    --w: calc(100% / var(--count));
+    clip-path: inset(
+      4px calc(100% - var(--w) * (var(--index) + 1) + 4px) 4px calc(var(--w) * var(--index) + 4px) round 999px
+    );
+    transition: clip-path 420ms var(--ease-glass);
+  }
+
+  /* On a phone the screen is shown at twice the width and pans sideways, so it stays readable. */
+  .dash-stage {
+    margin-top: clamp(24px, 3vw, 40px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    border-radius: clamp(12px, 1.8vw, 24px);
+    background: #f4f3f0;
+    box-shadow:
+      0 0 0 1px var(--rule),
+      0 40px 80px -40px rgba(28, 28, 30, 0.28);
+  }
+
+  .dash-stage::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dash-track {
+    position: relative;
+    width: 200%;
+    aspect-ratio: 1862 / 1086;
+  }
+
+  @media (min-width: 700px) {
+    .dash-stage {
+      overflow: hidden;
+    }
+
+    .dash-track {
+      width: 100%;
+    }
+  }
+
+  /* Blur bridges the two screens, so the swap reads as one surface changing. */
+  .dash-panel {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    filter: blur(6px);
+    transition:
+      opacity 260ms ease,
+      filter 260ms ease;
+  }
+
+  .dash-panel[data-current] {
+    opacity: 1;
+    filter: none;
+  }
+
+  .dash-panel :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dash-pill,
+    .dash-panel {
+      transition: none;
+    }
+  }
+</style>

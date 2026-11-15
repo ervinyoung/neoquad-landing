@@ -1,0 +1,29 @@
+---
+// A headline set word by word, so each word can arrive on its own beat.
+// parts: plain strings, { i: 'italic words' } for the second thought, or 'br' for a line break.
+type Part = string | { i: string };
+interface Props {
+  parts: Part[];
+}
+const { parts } = Astro.props;
+
+let n = 0;
+const groups = parts.map((part) => {
+  if (part === 'br') return { br: true as const };
+  const italic = typeof part !== 'string';
+  const words = (italic ? part.i : part).split(' ').filter(Boolean);
+  return { italic, words: words.map((word) => ({ word, n: n++ })) };
+});
+---
+
+{
+  groups.map((group) => {
+    if ('br' in group) return <br />;
+    const words = group.words.map(({ word, n }) => (
+      <>
+        <span class="word" style={`--w:${n}`}>{word}</span>{' '}
+      </>
+    ));
+    return group.italic ? <i>{words}</i> : words;
+  })
+}

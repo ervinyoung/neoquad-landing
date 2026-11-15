@@ -1,0 +1,87 @@
+---
+// The first screen: one photograph, one line, one way in.
+//
+//   scene   which light the coast is in ("dusk" or "blue-hour")
+//   line    the headline, in parts: strings, { i: 'italic' } for the second thought, 'br' to break
+//   calm    set the line a size down, for a longer sentence
+//   <slot>  the action, bottom right
+//
+// The headline arrives word by word; the action follows once the last word has landed.
+import Coast from './Coast.astro';
+import Words from './Words.astro';
+
+type Part = string | { i: string };
+interface Props {
+  scene: 'dusk' | 'blue-hour';
+  line: Part[];
+  calm?: boolean;
+}
+const { scene, line, calm = false } = Astro.props;
+
+const words = line
+  .filter((part) => part !== 'br')
+  .flatMap((part) => (typeof part === 'string' ? part : part.i).split(' '))
+  .filter(Boolean).length;
+// Matches the word timing in global.css: 320ms lead, 85ms a word.
+const actionDelay = 320 + words * 85 + 220;
+---
+
+<section class:list={['hero', `hero--${scene}`, calm && 'hero--calm']}>
+  <div class="window hero-window">
+    <Coast scene={scene} />
+    <div class="hero-copy">
+      <h1 class="line hero-line"><Words parts={line} /></h1>
+      <div class="hero-action" data-arrive style={`--d:${actionDelay}ms`}><slot /></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: var(--gutter);
+  }
+
+  .hero-window {
+    display: flex;
+    align-items: flex-end;
+    min-height: calc(100svh - 2 * var(--gutter));
+    padding: calc(var(--margin) - var(--gutter));
+    padding-top: 120px;
+    padding-bottom: max(calc(var(--margin) - var(--gutter)), env(safe-area-inset-bottom, 0px));
+  }
+
+  /* The colour the window holds before its photograph has loaded. */
+  .hero--dusk .hero-window {
+    background: #8f7f86;
+  }
+
+  .hero--blue-hour .hero-window {
+    background: #2b3a54;
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: clamp(28px, 4vw, 48px);
+    width: 100%;
+    view-transition-name: hero-copy;
+  }
+
+  .hero-line {
+    font-size: clamp(2.75rem, 1.4rem + 6.2vw, 6.75rem);
+    text-shadow: 0 1px 32px rgba(0, 0, 0, 0.22);
+  }
+
+  .hero--calm .hero-line {
+    max-width: 12.5em;
+    font-size: clamp(2.25rem, 1.3rem + 4.1vw, 5rem);
+    line-height: 1.06;
+  }
+
+  .hero-action {
+    display: flex;
+    margin-bottom: 0.4rem;
+  }
+</style>

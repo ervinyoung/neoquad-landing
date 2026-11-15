@@ -1,0 +1,23 @@
+---
+// Seed + wordmark, placed exactly as in the Logo Pack lockup. The wordmark is a drawing; never retype it.
+import Mark from './Mark.astro';
+import lockup from '../data/lockup.json';
+
+interface Props {
+  wave?: boolean;
+  class?: string;
+  [attr: string]: unknown;
+}
+const { wave = false, class: className, ...rest } = Astro.props;
+---
+
+<svg class:list={['lockup', className]} viewBox={lockup.viewBox.join(' ')} role="img" aria-label="neoQuad" {...rest}>
+  <Mark wave={wave} x={0} y={0} width={lockup.seed.width} height={lockup.seed.height} />
+  <path d={lockup.wordmark.d} transform={`translate(${lockup.wordmark.x} ${lockup.wordmark.y})`} fill="currentColor"></path>
+</svg>
+
+<style>
+  .lockup {
+    overflow: visible;
+  }
+</style>

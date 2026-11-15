@@ -1,0 +1,136 @@
+---
+// The same coast in two lights. Name the scene; everything else is handled here.
+//
+//   scene="dusk"       The picture leads: the sharp dusk photograph, with a moving sea and a
+//                      progressive blur rising from the bottom, under the headline.
+//   scene="blue-hour"  The words lead: the photograph blurred to light and colour, drifting slowly.
+//
+// Each scene also fetches the other one quietly, so switching pages never lands on an empty window.
+// Place it as the first child of a `.window`.
+import { Image } from 'astro:assets';
+import dusk from '../assets/photos/dusk.jpg';
+import duskSoft from '../assets/photos/dusk-soft.jpg';
+import duskSofter from '../assets/photos/dusk-softer.jpg';
+import duskMask from '../assets/photos/dusk-mask.png';
+import blueHour from '../assets/photos/bluehour-blur.jpg';
+
+interface Props {
+  scene: 'dusk' | 'blue-hour';
+}
+const { scene } = Astro.props;
+
+const duskSizes = { widths: [750, 1200, 1800, 2400], sizes: '100vw', quality: 78 };
+const blueSizes = { widths: [750, 1200, 1920], sizes: '100vw', quality: 70 };
+const lead = { loading: 'eager', fetchpriority: 'high', decoding: 'sync' } as const;
+const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-warm' } as const;
+---
+
+{
+  scene === 'dusk' ? (
+    <div class="coast coast--dusk" data-living-coast data-mask={duskMask.src} data-focus-x="0.38" data-focus-y="1">
+      <Image class="coast-photo" src={dusk} alt="The Santa Barbara coast at dusk, pink sky over dark bluffs" {...duskSizes} {...lead} />
+      <canvas class="coast-live" aria-hidden="true" />
+      <Image class="coast-blur coast-blur--soft" src={duskSoft} alt="" widths={[600, 1200]} sizes="100vw" quality={70} loading="eager" />
+      <Image class="coast-blur coast-blur--softer" src={duskSofter} alt="" widths={[400, 800]} sizes="100vw" quality={70} loading="eager" />
+      <Image src={blueHour} {...blueSizes} {...warm} />
+    </div>
+  ) : (
+    <div class="coast coast--blue-hour">
+      <Image class="coast-photo" src={blueHour} alt="" {...blueSizes} {...lead} />
+      <Image src={dusk} {...duskSizes} {...warm} />
+    </div>
+  )
+}
+
+<script>
+  import { start, type Stop } from '../scripts/living-coast';
+
+  let stop: Stop | null = null;
+  const end = () => {
+    stop?.();
+    stop = null;
+  };
+
+  document.addEventListener('astro:page-load', async () => {
+    end();
+    const root = document.querySelector<HTMLElement>('[data-living-coast]');
+    if (root) stop = await start(root).catch(() => null);
+  });
+  document.addEventListener('astro:before-swap', end);
+</script>
+
+<style>
+  .coast {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    view-transition-name: coast;
+  }
+
+  .coast :global(img),
+  .coast-live {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+  }
+
+  .coast :global(.coast-warm) {
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Dusk */
+  .coast--dusk :global(img) {
+    object-position: 38% 100%;
+  }
+
+  /* The living layer fades in over the still photograph once its first frame is drawn. */
+  .coast-live {
+    opacity: 0;
+    transition: opacity 1200ms ease;
+  }
+
+  .coast-live[data-on] {
+    opacity: 1;
+  }
+
+  /* Progressive blur, bottom up: a light blur reaching to mid-picture, a deep one under the words. */
+  .coast :global(.coast-blur--soft) {
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 12%, transparent 44%);
+    mask-image: linear-gradient(to top, #000 0%, #000 12%, transparent 44%);
+  }
+
+  .coast :global(.coast-blur--softer) {
+    -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.9) 8%, transparent 28%);
+    mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.9) 8%, transparent 28%);
+  }
+
+  /* Blue hour: only light and colour, so it may drift, slowly enough to be felt before it is seen. */
+  .coast--blue-hour :global(.coast-photo) {
+    inset: -4%;
+    width: 108%;
+    height: 108%;
+    animation: drift 46s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    from {
+      transform: translate3d(-1.6%, 1.2%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(1.6%, -1.2%, 0) scale(1.05);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .coast--blue-hour :global(.coast-photo) {
+      animation: none;
+    }
+  }
+</style>

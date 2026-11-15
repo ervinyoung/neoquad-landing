@@ -1,0 +1,80 @@
+---
+// Every page: head, the persistent nav, the footer, and the page lifecycle flags.
+//
+//   audience  "students" or "schools" lights that side of the switch and gives the nav its action;
+//             "none" (legal pages, not found) lights neither.
+import { ClientRouter } from 'astro:transitions';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { links } from '../config';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  audience?: 'students' | 'schools' | 'none';
+}
+const { title, description, audience = 'none' } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og-image.jpg', Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {audience === 'students' && <meta name="apple-itunes-app" content={`app-id=${links.appStoreId}`} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      // Flags the stylesheet reads from <html>. A page switch resets <html>, so they are put back after each one.
+      //   js          scripting is on (scroll reveals may hide content until seen)
+      //   data-ios    an iPhone: the student action is the App Store
+      //   data-first  the first page of the visit (the mark plays its Wave)
+      //   data-enter  a page is arriving: "load" on the first page, "switch" after a page switch
+      //   data-dir    "back" when switching toward Students, so the words leave the right way
+      (function () {
+        var root = document.documentElement;
+        var dir = '';
+        var flag = function (enter) {
+          root.classList.add('js');
+          if (/iPhone|iPod/.test(navigator.userAgent)) root.setAttribute('data-ios', '');
+          root.setAttribute('data-enter', enter);
+          if (dir) root.setAttribute('data-dir', dir);
+        };
+        flag('load');
+        root.setAttribute('data-first', '');
+        document.addEventListener('astro:before-preparation', function (event) {
+          dir = event.to.pathname.replace(/\/$/, '') === '' ? 'back' : '';
+          if (dir) root.setAttribute('data-dir', dir);
+          else root.removeAttribute('data-dir');
+        });
+        document.addEventListener('astro:after-swap', function () {
+          flag('switch');
+        });
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <Nav audience={audience} />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/page';
+    </script>
+  </body>
+</html>
