@@ -15,7 +15,9 @@ Each piece hides how it works behind a small interface. Start from the page and 
 
 | Piece | Use | What it hides |
 | --- | --- | --- |
-| `Hero` | `<Hero scene="dusk" line={[…]}><Action to="app" /></Hero>` | The window, the coast, the word-by-word headline and when the action arrives |
+| `Hero` | `<Hero scene="dusk" line={[…]}><Action to="app" /></Hero>`, plus an optional `slot="device"` | The window, the coast, the word-by-word headline, when the action arrives, and the two layouts (default, and the phone "stage" used when a device is given) |
+| `GlassPhone` | `<GlassPhone slot="device">…screen…</GlassPhone>` | The clear glass phone: body, rim, Dynamic Island; scales to any width |
+| `AppWireframe` | `<AppWireframe />` inside a `GlassPhone` | The neoQuad app drawn in glass and its animation (pins drop, sheet rises, events arrive, the live pin ripples) |
 | `Coast` | `<Coast scene="dusk" \| "blue-hour" />` | The moving sea (WebGL), the bottom-up blur, the drifting blur, preloading the other scene |
 | `Action` | `<Action to="app" \| "booking" tone="clear" \| "accent" compact? />` | Links, labels, the iPhone / web swap, the Liquid Glass button |
 | `Mark`, `Lockup` | `<Mark wave />`, `<Lockup />` | The seed artwork and its Wave |

@@ -1,0 +1,437 @@
+---
+// The neoQuad app, drawn in glass for a GlassPhone screen: the campus map with its pins,
+// and the Events sheet with what is happening now. It plays once as the page arrives
+// (pins drop, the sheet rises, the events come in), then stays alive: the live pin ripples.
+// Everything is sized in cqw, so it scales with the phone. It is decoration; the phone is aria-hidden.
+
+const pins = [
+  { x: 23, y: 17, live: false },
+  { x: 62, y: 11, live: false },
+  { x: 44, y: 25, live: true },
+  { x: 78, y: 24, live: false },
+  { x: 15, y: 31, live: false },
+];
+
+const events = [
+  { name: 'Club Rush', place: 'Friendship Plaza · Until 2:35 AM', food: true },
+  { name: 'Study Jam: Midterm Edition', place: 'Luria Library · Until 3:05 AM', food: true },
+  { name: 'Open Studio Night', place: 'Drama/Music · Until 2:20 AM', food: false },
+];
+
+const tabs = ['Events', 'Places', 'Orgs', 'Me'];
+---
+
+<div class="app">
+  <div class="status">
+    <span>9:41</span>
+    <svg viewBox="0 0 46 12" aria-hidden="true">
+      <path d="M7.7 2.3a8.6 8.6 0 0 1 6 2.4l.6-.6a.3.3 0 0 0 0-.4 9.6 9.6 0 0 0-13.200 0 .3.3 0 0 0 0 .4l.6.6a8.600 8.600 0 0 1 6-2.400Zm0 3a5.600 5.600 0 0 1 3.800 1.500l.700-.700a.3.3 0 0 0 0-.400 6.600 6.600 0 0 0-9 0 .3.3 0 0 0 0 .400l.700.700a5.600 5.600 0 0 1 3.800-1.500Zm2 2.700-1.800 1.800a.3.3 0 0 1-.400 0L5.700 8a.3.3 0 0 1 0-.400 3 3 0 0 1 4 0 .3.3 0 0 1 0 .400Z" />
+      <rect x="21.500" y=".5" width="21" height="11" rx="3.300" fill="none" stroke="currentColor" opacity=".4" />
+      <rect x="23" y="2" width="18" height="8" rx="2" />
+      <path d="M44 4.200v3.600c.800-.300 1.300-1 1.300-1.800s-.500-1.500-1.300-1.800Z" opacity=".45" />
+    </svg>
+  </div>
+
+  <ul class="pins">
+    {
+      pins.map((pin, i) => (
+        <li class:list={['pin', pin.live && 'pin--live']} style={`left:${pin.x}%;top:${pin.y}%;--n:${i}`}>
+          <span />
+          {pin.live && <em>Live</em>}
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="sheet-head">
+      <span class="sheet-title">Events</span>
+      <span class="plus"></span>
+    </div>
+    <div class="group">
+      <p class="now"><i></i>Happening Now<span>3 events</span></p>
+      <ul>
+        {
+          events.map((event, i) => (
+            <li class="event" style={`--n:${i}`}>
+              <span class="avatar" />
+              <span class="event-text">
+                <b>{event.name}</b>
+                <small>{event.place}</small>
+              </span>
+              {event.food && (
+                <svg class="food" viewBox="0 0 10 14" aria-hidden="true">
+                  <path d="M2.600 0v4M.800 0v3.600a1.800 1.800 0 0 0 3.600 0V0M2.600 5.400V14M7.200 14V0c1.600.800 2.400 2.600 2.400 5.200 0 1.400-.800 2.400-2.400 2.800" />
+                </svg>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <ul class="tabs">
+      {tabs.map((tab, i) => <li class:list={[i === 0 && 'is-on']}><i />{tab}</li>)}
+    </ul>
+  </div>
+</div>
+
+<style>
+  .app {
+    position: absolute;
+    inset: 0;
+    color: var(--white);
+    font-family: var(--sans);
+    line-height: 1.2;
+  }
+
+  ul,
+  p {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Status bar: 9:41, Wi-Fi, a full battery. */
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 13.4cqw;
+    padding: 0 8.4cqw 0 10.4cqw;
+    font-size: 5.2cqw;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .status svg {
+    width: 15cqw;
+    fill: currentColor;
+  }
+
+  /* The map: the photograph itself, seen through the glass. Pins mark what is on. */
+  .pin {
+    position: absolute;
+    width: 10cqw;
+    height: 10cqw;
+    margin: -5cqw 0 0 -5cqw;
+  }
+
+  .pin span {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.26);
+    box-shadow:
+      inset 0 0 0 0.7cqw rgba(255, 255, 255, 0.92),
+      0 1.4cqw 3cqw rgba(12, 20, 48, 0.28);
+  }
+
+  .pin span::after {
+    content: '';
+    position: absolute;
+    inset: 3.4cqw;
+    border-radius: 50%;
+    background: var(--white);
+  }
+
+  /* The live pin carries its tag, as it does in the app. */
+  .pin em {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 1.2cqw);
+    padding: 0.9cqw 2.2cqw 1cqw;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1c1c1e;
+    font-size: 3cqw;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transform: translateX(-50%);
+  }
+
+  :global(html[data-enter]) .pin em {
+    animation: tag-in 500ms var(--ease-out) backwards;
+    animation-delay: calc(var(--t0, 1500ms) + var(--n) * 110ms + 380ms);
+  }
+
+  @keyframes tag-in {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(1.6cqw) scale(0.9);
+    }
+  }
+
+  /* The live pin sends out a ripple, at the pace of the brand's Wave. */
+  .pin--live::before,
+  .pin--live::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 0.5cqw rgba(255, 255, 255, 0.8);
+    opacity: 0;
+    animation: ripple 2800ms cubic-bezier(0.23, 1, 0.32, 1) 2600ms infinite;
+  }
+
+  .pin--live::after {
+    animation-delay: 3300ms;
+  }
+
+  @keyframes ripple {
+    0% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+
+  /* The Events sheet: regular glass, so its words stay readable. */
+  .sheet {
+    position: absolute;
+    inset: 39% 0 0 0;
+    padding: 2.4cqw 4.6cqw 0;
+    border-radius: 9cqw 9cqw 0 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.09));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 -3cqw 8cqw rgba(12, 20, 48, 0.14);
+  }
+
+  .grabber {
+    width: 11cqw;
+    height: 1.4cqw;
+    margin: 0 auto;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 3.4cqw;
+    padding: 0 1.6cqw;
+  }
+
+  .sheet-title {
+    font-size: 8.2cqw;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .plus {
+    position: relative;
+    width: 10.4cqw;
+    height: 10.4cqw;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  }
+
+  .plus::before,
+  .plus::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4cqw;
+    height: 0.56cqw;
+    margin: -0.28cqw 0 0 -2cqw;
+    border-radius: 999px;
+    background: var(--white);
+  }
+
+  .plus::after {
+    transform: rotate(90deg);
+  }
+
+  .group {
+    margin-top: 4cqw;
+    padding: 3.6cqw 3.4cqw 1cqw;
+    border-radius: 6.4cqw;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .now {
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    font-size: 5.4cqw;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .now i {
+    width: 2.2cqw;
+    height: 2.2cqw;
+    border-radius: 50%;
+    background: #34c759;
+    animation: breathe 2800ms cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+
+  @keyframes breathe {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .now span {
+    margin-left: auto;
+    font-size: 4.2cqw;
+    font-weight: 400;
+    opacity: 0.72;
+  }
+
+  .event {
+    display: flex;
+    align-items: center;
+    gap: 3.2cqw;
+    padding: 3.2cqw 0;
+  }
+
+  .avatar {
+    flex: none;
+    width: 10cqw;
+    height: 10cqw;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  }
+
+  .event-text {
+    display: grid;
+    gap: 0.8cqw;
+    min-width: 0;
+  }
+
+  .event b,
+  .event small {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .event b {
+    font-size: 5cqw;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .event small {
+    font-size: 4.2cqw;
+    opacity: 0.74;
+  }
+
+  .food {
+    flex: none;
+    width: 3.2cqw;
+    margin-left: auto;
+    fill: none;
+    stroke: #ffb340;
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Tab bar: a glass capsule floating over the list. */
+  .tabs {
+    position: absolute;
+    left: 5.4cqw;
+    right: 5.4cqw;
+    bottom: 5cqw;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 1.6cqw;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    font-size: 3.1cqw;
+    font-weight: 500;
+  }
+
+  .tabs li {
+    display: grid;
+    justify-items: center;
+    gap: 1.1cqw;
+    padding: 2cqw 0 1.7cqw;
+    border-radius: 999px;
+    opacity: 0.86;
+  }
+
+  .tabs i {
+    width: 5.6cqw;
+    height: 4.6cqw;
+    border-radius: 1.3cqw;
+    box-shadow: inset 0 0 0 0.56cqw currentColor;
+  }
+
+  .tabs .is-on {
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 1;
+  }
+
+  .tabs .is-on i {
+    background: currentColor;
+  }
+
+  /* ---------- Arriving: pins drop, the sheet rises, the events come in ---------- */
+
+  @keyframes pin-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-5cqw) scale(0.6);
+    }
+  }
+
+  @keyframes sheet-rise {
+    from {
+      opacity: 0;
+      transform: translateY(18%);
+    }
+  }
+
+  @keyframes event-in {
+    from {
+      opacity: 0;
+      transform: translateY(3cqw);
+      filter: blur(1.4cqw);
+    }
+  }
+
+  :global(html[data-enter]) .pin span {
+    animation: pin-drop 620ms var(--ease-out) backwards;
+    animation-delay: calc(var(--t0, 1500ms) + var(--n) * 110ms);
+  }
+
+  :global(html[data-enter]) .sheet {
+    animation: sheet-rise 900ms var(--ease-glass) backwards;
+    animation-delay: calc(var(--t0, 1500ms) + 420ms);
+  }
+
+  :global(html[data-enter]) .event {
+    animation: event-in 700ms var(--ease-out) backwards;
+    animation-delay: calc(var(--t0, 1500ms) + 900ms + var(--n) * 130ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html[data-enter]) .pin span,
+    :global(html[data-enter]) .pin em,
+    :global(html[data-enter]) .sheet,
+    :global(html[data-enter]) .event,
+    .pin--live::before,
+    .pin--live::after,
+    .now i {
+      animation: none;
+    }
+  }
+</style>

@@ -4,9 +4,15 @@
 //   scene   which light the coast is in ("dusk" or "blue-hour")
 //   line    the headline, in parts: strings, { i: 'italic' } for the second thought, 'br' to break
 //   calm    set the line a size down, for a longer sentence
-//   <slot>  the action, bottom right
+//   <slot>  the action
+//   <slot name="device">  optional: something to stand on the photograph, such as a GlassPhone
 //
 // The headline arrives word by word; the action follows once the last word has landed.
+//
+// Two layouts, chosen here and nowhere else:
+//   - Default: the line bottom left, the action bottom right.
+//   - Stage (phones, when a device is given): the line centred at the top, the device rising
+//     from the bottom edge, and the action as one wide button pinned beneath it.
 import Coast from './Coast.astro';
 import Words from './Words.astro';
 
@@ -24,11 +30,13 @@ const words = line
   .filter(Boolean).length;
 // Matches the word timing in global.css: 320ms lead, 85ms a word.
 const actionDelay = 320 + words * 85 + 220;
+const staged = Astro.slots.has('device');
 ---
 
-<section class:list={['hero', `hero--${scene}`, calm && 'hero--calm']}>
+<section class:list={['hero', `hero--${scene}`, calm && 'hero--calm', staged && 'hero--stage']}>
   <div class="window hero-window">
     <Coast scene={scene} />
+    {staged && <div class="hero-device" style={`--t0:${actionDelay - 300}ms`}><slot name="device" /></div>}
     <div class="hero-copy">
       <h1 class="line hero-line"><Words parts={line} /></h1>
       <div class="hero-action" data-arrive style={`--d:${actionDelay}ms`}><slot /></div>
@@ -66,10 +74,13 @@ const actionDelay = 320 + words * 85 + 220;
     justify-content: space-between;
     gap: clamp(28px, 4vw, 48px);
     width: 100%;
-    view-transition-name: hero-copy;
   }
 
+  /* Named for the page switch (see global.css). The name is on the line, not on the block that
+     also holds the action: a named element is drawn on its own layer, and a glass button inside
+     one has nothing behind it to blur. */
   .hero-line {
+    view-transition-name: hero-copy;
     font-size: clamp(2.75rem, 1.4rem + 6.2vw, 6.75rem);
     text-shadow: 0 1px 32px rgba(0, 0, 0, 0.22);
   }
@@ -83,5 +94,86 @@ const actionDelay = 320 + words * 85 + 220;
   .hero-action {
     display: flex;
     margin-bottom: 0.4rem;
+  }
+
+  /* The device only stands on the stage. */
+  .hero-device {
+    display: none;
+  }
+
+  /* ---------- Stage: phones ---------- */
+  @media (max-width: 699px) {
+    .hero--stage {
+      /* The photograph softens under the line at the top as well as under the action. */
+      --coast-soft-top: 1;
+    }
+
+    .hero--stage .hero-window {
+      align-items: stretch;
+      padding: 0;
+    }
+
+    .hero--stage .hero-copy {
+      position: relative;
+      z-index: 1;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      gap: 0;
+      padding: calc(104px + env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+      text-align: center;
+    }
+
+    .hero--stage .hero-line {
+      padding-inline: 8px;
+      font-size: clamp(2.5rem, 1.1rem + 7.4vw, 3.25rem);
+      text-shadow:
+        0 1px 2px rgba(30, 24, 44, 0.18),
+        0 2px 28px rgba(30, 24, 44, 0.34);
+    }
+
+    .hero--stage .hero-action {
+      margin: auto 0 0;
+    }
+
+    /* One wide button. It sits over the device, so its glass is thicker: more frost, more light. */
+    .hero--stage .hero-action :global(.btn) {
+      --glass-top: rgba(255, 255, 255, 0.62);
+      --glass-bottom: rgba(255, 255, 255, 0.36);
+      flex: 1;
+      min-height: 58px;
+      font-size: 1.125rem;
+      -webkit-backdrop-filter: blur(26px) saturate(1.8) brightness(1.12);
+      backdrop-filter: blur(26px) saturate(1.8) brightness(1.12);
+      text-shadow: 0 1px 2px rgba(30, 24, 44, 0.28);
+    }
+
+    /* The device rises out of the bottom edge and stays partly below it. */
+    .hero--stage .hero-device {
+      display: block;
+      position: absolute;
+      left: 50%;
+      top: clamp(292px, 43%, 440px);
+      width: min(72%, 310px);
+      transform: translateX(-50%);
+    }
+
+    @keyframes device-rise {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 34%);
+      }
+    }
+
+    :global(html[data-enter]) .hero--stage .hero-device {
+      animation: device-rise 1400ms var(--ease-glass) backwards;
+      animation-delay: calc(var(--t0) - 420ms);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      :global(html[data-enter]) .hero--stage .hero-device {
+        animation: none;
+      }
+    }
   }
 </style>

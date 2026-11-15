@@ -5,6 +5,8 @@ import QRCode from 'qrcode';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import Action from '../components/Action.astro';
+import GlassPhone from '../components/GlassPhone.astro';
+import AppWireframe from '../components/AppWireframe.astro';
 import { links, campus } from '../config';
 
 import glassSeed from '../assets/logo/glass-seed.png';
@@ -48,6 +50,7 @@ const qr = await QRCode.toString(links.appStore, {
   description={`Clubs, workshops, free food and games at ${campus.name}, posted by the people running them. Free for students.`}
 >
   <Hero scene="dusk" line={[`Every event at ${campus.short}.`, 'br', { i: 'One place.' }]}>
+    <GlassPhone slot="device"><AppWireframe /></GlassPhone>
     <Action to="app" />
   </Hero>
 

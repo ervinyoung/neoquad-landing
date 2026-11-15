@@ -364,7 +364,7 @@ html.js [data-reveal].is-in {
 }
 
 html[data-enter] .word {
-  animation: word-in 1200ms var(--ease-out) both;
+  animation: word-in 1200ms var(--ease-out) backwards;
   animation-delay: calc(320ms + var(--w) * 85ms);
 }
 
@@ -376,7 +376,9 @@ html[data-enter] .word {
 }
 
 html[data-enter] [data-arrive] {
-  animation: arrive 1000ms var(--ease-out) both;
+  /* backwards, not both: once it has arrived the element must stop being its own layer,
+     or the glass button inside it has nothing behind it to blur. */
+  animation: arrive 1000ms var(--ease-out) backwards;
   animation-delay: var(--d, 240ms);
 }
 
