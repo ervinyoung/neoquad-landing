@@ -1,13 +1,13 @@
 ---
 // The same coast in two lights. Name the scene; everything else is handled here.
 //
-//   scene="dusk"       The picture leads: the sharp dusk photograph, with a moving sea and a
-//                      progressive blur rising from the bottom, under the headline.
+//   scene="dusk"       The picture leads: the sharp dusk photograph, with a moving sea, drifting
+//                      clouds, and a progressive blur rising from the bottom, under the headline.
 //   scene="blue-hour"  The words lead: the photograph blurred to light and colour, drifting slowly.
 //
 // Each scene also fetches the other one quietly, so switching pages never lands on an empty window.
 // Place it as the first child of a `.window`.
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import dusk from '../assets/photos/dusk.jpg';
 import duskSoft from '../assets/photos/dusk-soft.jpg';
 import duskSofter from '../assets/photos/dusk-softer.jpg';
@@ -19,19 +19,47 @@ interface Props {
 }
 const { scene } = Astro.props;
 
-const duskSizes = { widths: [750, 1200, 1800, 2400], sizes: '100vw', quality: 78 };
+// The photograph is cropped to cover the window. On a tall screen it is the height that decides how
+// wide the picture is drawn (16:9, so 178% of the height), and the browser must be told, or it
+// fetches a file sized for the width alone and stretches it.
+const duskSizes = { widths: [750, 1200, 1600, 2000, 2400], sizes: 'max(100vw, 178vh)', quality: 78 };
+// The first thing painted in the window: the smallest, softest copy, so the picture arrives as a
+// whole that sharpens, never as a band filling in from the top.
+const duskFirst = await getImage({ src: duskSofter, width: 400, quality: 60 });
 const blueSizes = { widths: [750, 1200, 1920], sizes: '100vw', quality: 70 };
+// Progressive blur: two softer copies of the photograph laid over it. Each is whole from an edge of
+// the window up to `full` and gone by `end` (fractions of the window's height). The bottom is always
+// softened; the top only when a parent sets --coast-soft-top: 1, for words set up there.
+// Written once here, and read by both the still picture (CSS masks) and the living one (the shader).
+const blur = {
+  soft: { bottom: { full: 0.12, end: 0.44 }, top: { full: 0.16, end: 0.48 } },
+  softer: { bottom: { full: 0.03, end: 0.28 }, top: { full: 0.1, end: 0.36 } },
+};
+const pct = (n: number) => `${n * 100}%`;
+const blurVars = Object.entries(blur)
+  .flatMap(([layer, edges]) =>
+    Object.entries(edges).flatMap(([edge, stop]) => [`--${layer}-${edge}-full:${pct(stop.full)}`, `--${layer}-${edge}-end:${pct(stop.end)}`]),
+  )
+  .join(';');
 const lead = { loading: 'eager', fetchpriority: 'high', decoding: 'sync' } as const;
 const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-warm' } as const;
 ---
 
 {
   scene === 'dusk' ? (
-    <div class="coast coast--dusk" data-living-coast data-mask={duskMask.src} data-focus-x="0.38" data-focus-y="1">
+    <div
+      class="coast coast--dusk"
+      data-living-coast
+      data-mask={duskMask.src}
+      data-blur={JSON.stringify(blur)}
+      data-focus-x="0.38"
+      data-focus-y="1"
+      style={`background-image:url(${duskFirst.src});${blurVars}`}
+    >
       <Image class="coast-photo" src={dusk} alt="The Santa Barbara coast at dusk, pink sky over dark bluffs" {...duskSizes} {...lead} />
-      <canvas class="coast-live" aria-hidden="true" />
       <Image class="coast-blur coast-blur--soft" src={duskSoft} alt="" widths={[600, 1200]} sizes="100vw" quality={70} loading="eager" />
       <Image class="coast-blur coast-blur--softer" src={duskSofter} alt="" widths={[400, 800]} sizes="100vw" quality={70} loading="eager" />
+      <canvas class="coast-live" aria-hidden="true" />
       <Image src={blueHour} {...blueSizes} {...warm} />
     </div>
   ) : (
@@ -51,10 +79,23 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
     stop = null;
   };
 
+  // The living layer is a finishing touch. It waits until the page has loaded and the browser is
+  // idle, and it stays off for visitors who asked to save data.
+  const whenQuiet = () =>
+    new Promise<void>((resolve) => {
+      const idle = () => ('requestIdleCallback' in window ? requestIdleCallback(() => resolve(), { timeout: 1500 }) : setTimeout(resolve, 300));
+      if (document.readyState === 'complete') idle();
+      else addEventListener('load', idle, { once: true });
+    });
+
   document.addEventListener('astro:page-load', async () => {
     end();
     const root = document.querySelector<HTMLElement>('[data-living-coast]');
-    if (root) stop = await start(root).catch(() => null);
+    if (!root) return;
+    if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return;
+    await whenQuiet();
+    if (!root.isConnected) return;
+    stop = await start(root).catch(() => null);
   });
   document.addEventListener('astro:before-swap', end);
 </script>
@@ -86,11 +127,32 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
   }
 
   /* Dusk */
+  .coast--dusk {
+    background-size: cover;
+    background-position: 38% 100%;
+  }
+
   .coast--dusk :global(img) {
     object-position: 38% 100%;
   }
 
-  /* The living layer fades in over the still photograph once its first frame is drawn. */
+  /* The whole scene eases toward you and back, so the picture is never quite still. */
+  .coast--dusk {
+    transform-origin: 62% 58%;
+    animation: approach 38s ease-in-out infinite alternate;
+  }
+
+  @keyframes approach {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.06);
+    }
+  }
+
+  /* The living layer fades in over the still picture once its first frame is drawn. It draws the
+     photograph and both blurs itself, so the softened parts move with the rest. */
   .coast-live {
     opacity: 0;
     transition: opacity 1200ms ease;
@@ -101,25 +163,29 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
   }
 
   /* Progressive blur, bottom up: a light blur reaching to mid-picture, a deep one under the words.
-     A parent can set --coast-soft-top: 1 to soften the top the same way, for words set up there. */
-  .coast :global(.coast-blur--soft) {
+     The stops are the `blur` table above, arriving as custom properties on .coast. */
+  .coast :global(.coast-blur) {
     --top: rgba(0, 0, 0, var(--coast-soft-top, 0));
     -webkit-mask-image:
-      linear-gradient(to top, #000 0%, #000 12%, transparent 44%),
-      linear-gradient(to bottom, var(--top) 0%, var(--top) 16%, transparent 48%);
+      linear-gradient(to top, #000 var(--full-b), transparent var(--end-b)),
+      linear-gradient(to bottom, var(--top) var(--full-t), transparent var(--end-t));
     mask-image:
-      linear-gradient(to top, #000 0%, #000 12%, transparent 44%),
-      linear-gradient(to bottom, var(--top) 0%, var(--top) 16%, transparent 48%);
+      linear-gradient(to top, #000 var(--full-b), transparent var(--end-b)),
+      linear-gradient(to bottom, var(--top) var(--full-t), transparent var(--end-t));
+  }
+
+  .coast :global(.coast-blur--soft) {
+    --full-b: var(--soft-bottom-full);
+    --end-b: var(--soft-bottom-end);
+    --full-t: var(--soft-top-full);
+    --end-t: var(--soft-top-end);
   }
 
   .coast :global(.coast-blur--softer) {
-    --top: rgba(0, 0, 0, calc(var(--coast-soft-top, 0) * 0.9));
-    -webkit-mask-image:
-      linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.9) 8%, transparent 28%),
-      linear-gradient(to bottom, var(--top) 0%, var(--top) 10%, transparent 36%);
-    mask-image:
-      linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.9) 8%, transparent 28%),
-      linear-gradient(to bottom, var(--top) 0%, var(--top) 10%, transparent 36%);
+    --full-b: var(--softer-bottom-full);
+    --end-b: var(--softer-bottom-end);
+    --full-t: var(--softer-top-full);
+    --end-t: var(--softer-top-end);
   }
 
   /* Blue hour: only light and colour, so it may drift, slowly enough to be felt before it is seen. */
@@ -140,6 +206,7 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .coast--dusk,
     .coast--blue-hour :global(.coast-photo) {
       animation: none;
     }

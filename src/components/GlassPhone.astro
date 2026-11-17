@@ -1,66 +1,152 @@
 ---
 // A phone made of clear Liquid Glass: you see the photograph through it.
-// It is only the object: a body, a thicker rim that bends the light, and the Dynamic Island.
+// It is only the object: a body, a thicker rim that bends the light, its keys, and the Dynamic Island.
 // Whatever goes on its screen is the slot. Sizes inside are in cqw (percent of the phone's width),
 // so the phone can be any size and keep its proportions.
+//
+// The screen's corner is the body's corner minus the rim. The slot can read it as --screen-radius
+// and carry the same rule inward (see AppWireframe).
 ---
 
 <div class="phone" aria-hidden="true">
-  <div class="phone-rim"></div>
+  <i class="phone-key phone-key--action"></i>
+  <i class="phone-key phone-key--up"></i>
+  <i class="phone-key phone-key--down"></i>
+  <i class="phone-key phone-key--side"></i>
+  <div class="phone-glass"></div>
   <div class="phone-screen"><slot /></div>
+  <div class="phone-rim"></div>
   <div class="phone-island"></div>
 </div>
 
 <style>
   .phone {
+    /* Read by the parts below, where cqw means this phone's width. */
+    --body-radius: 15cqw;
+    --rim: 2.4cqw;
+    --screen-radius: calc(var(--body-radius) - var(--rim));
+
     position: relative;
     container-type: inline-size;
     width: 100%;
     aspect-ratio: 264 / 548;
-    border-radius: 14.6% / 7.04%;
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 42%, rgba(255, 255, 255, 0.07));
-    -webkit-backdrop-filter: blur(3px) saturate(1.4);
-    backdrop-filter: blur(3px) saturate(1.4);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.75),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.2),
-      0 18px 48px rgba(12, 20, 48, 0.3);
   }
 
-  /* The rim: a band of thicker glass just inside the edge, blurring and brightening what is behind it. */
+  .phone-glass,
+  .phone-screen,
   .phone-rim {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
-    padding: 1.9cqw;
-    -webkit-backdrop-filter: blur(6px) brightness(1.14);
-    backdrop-filter: blur(6px) brightness(1.14);
-    background: rgba(255, 255, 255, 0.06);
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box exclude,
-      linear-gradient(#000 0 0);
-    mask:
-      linear-gradient(#000 0 0) content-box exclude,
-      linear-gradient(#000 0 0);
+    border-radius: calc(var(--body-radius) * var(--corner-reach));
+    corner-shape: var(--corner);
   }
 
+  /* The body: barely there. A breath of blur, a bright edge, and the shadow it casts on the sea. */
+  .phone-glass {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0.06));
+    -webkit-backdrop-filter: blur(2px) saturate(1.35);
+    backdrop-filter: blur(2px) saturate(1.35);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1.2cqw 2.4cqw rgba(12, 20, 48, 0.12),
+      0 9cqw 22cqw -4cqw rgba(12, 20, 48, 0.36);
+  }
+
+  /* The screen is what the rim leaves: a transparent border as wide as the rim, and the browser
+     draws the inner corner (outer minus rim) itself. A sheen crosses the glass, top left to right. */
   .phone-screen {
-    position: absolute;
-    inset: 1.9cqw;
     overflow: hidden;
-    border-radius: 12.9% / 6.1%;
+    border: var(--rim) solid transparent;
+  }
+
+  .phone-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      116deg,
+      rgba(255, 255, 255, 0) 22%,
+      rgba(255, 255, 255, 0.1) 31%,
+      rgba(255, 255, 255, 0.02) 46%,
+      rgba(255, 255, 255, 0) 58%
+    );
+    pointer-events: none;
+  }
+
+  /* The rim: a band of thicker glass around the screen. It catches the light at the top left and
+     the bottom right, as a polished edge does. (It is light only, no blur: a masked ring with
+     smoothed corners cannot also blur what is behind it.) */
+  .phone-rim {
+    border: var(--rim) solid transparent;
+    background: conic-gradient(
+        from 300deg,
+        rgba(255, 255, 255, 0.62),
+        rgba(255, 255, 255, 0.1) 14%,
+        rgba(255, 255, 255, 0.05) 42%,
+        rgba(255, 255, 255, 0.36) 52%,
+        rgba(255, 255, 255, 0.06) 64%,
+        rgba(255, 255, 255, 0.08) 88%,
+        rgba(255, 255, 255, 0.62)
+      )
+      border-box,
+      rgba(255, 255, 255, 0.07) border-box;
+    -webkit-mask:
+      linear-gradient(#000 0 0) padding-box exclude,
+      linear-gradient(#000 0 0) border-box;
+    mask:
+      linear-gradient(#000 0 0) padding-box exclude,
+      linear-gradient(#000 0 0) border-box;
+    pointer-events: none;
+  }
+
+  /* Keys: slivers of the same glass, standing just proud of the sides. */
+  .phone-key {
+    position: absolute;
+    width: 1cqw;
+    border-radius: 0.6cqw;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.24));
+  }
+
+  .phone-key--action,
+  .phone-key--up,
+  .phone-key--down {
+    right: calc(100% - 0.3cqw);
+  }
+
+  .phone-key--side {
+    left: calc(100% - 0.3cqw);
+    top: 52cqw;
+    height: 27cqw;
+    transform: scaleX(-1);
+  }
+
+  .phone-key--action {
+    top: 33cqw;
+    height: 8.4cqw;
+  }
+
+  .phone-key--up {
+    top: 48cqw;
+    height: 15.4cqw;
+  }
+
+  .phone-key--down {
+    top: 67cqw;
+    height: 15.4cqw;
   }
 
   .phone-island {
     position: absolute;
-    top: 4.4cqw;
+    top: calc(var(--rim) + 3cqw);
     left: 50%;
-    width: 31cqw;
+    width: 30cqw;
     height: 8.6cqw;
     border-radius: 999px;
-    background: rgba(10, 10, 12, 0.72);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    background: rgba(10, 10, 12, 0.76);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+      inset 0 -0.6cqw 1.2cqw rgba(255, 255, 255, 0.05);
     transform: translateX(-50%);
   }
 </style>

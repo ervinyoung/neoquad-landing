@@ -96,6 +96,22 @@ const staged = Astro.slots.has('device');
     margin-bottom: 0.4rem;
   }
 
+  /* From tablet width up the line wraps, never the layout: the action holds the bottom right. */
+  @media (min-width: 700px) {
+    .hero-copy {
+      flex-wrap: nowrap;
+    }
+
+    .hero-line {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hero-action {
+      flex: none;
+    }
+  }
+
   /* The device only stands on the stage. */
   .hero-device {
     display: none;
@@ -103,11 +119,6 @@ const staged = Astro.slots.has('device');
 
   /* ---------- Stage: phones ---------- */
   @media (max-width: 699px) {
-    .hero--stage {
-      /* The photograph softens under the line at the top as well as under the action. */
-      --coast-soft-top: 1;
-    }
-
     .hero--stage .hero-window {
       align-items: stretch;
       padding: 0;
@@ -120,13 +131,13 @@ const staged = Astro.slots.has('device');
       flex-wrap: nowrap;
       align-items: stretch;
       gap: 0;
-      padding: calc(104px + env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+      padding: calc(var(--line-top) + env(safe-area-inset-top, 0px)) var(--bar-gap) max(var(--bar-gap), env(safe-area-inset-bottom, 0px));
       text-align: center;
     }
 
     .hero--stage .hero-line {
       padding-inline: 8px;
-      font-size: clamp(2.5rem, 1.1rem + 7.4vw, 3.25rem);
+      font-size: var(--line-size);
       text-shadow:
         0 1px 2px rgba(30, 24, 44, 0.18),
         0 2px 28px rgba(30, 24, 44, 0.34);
@@ -136,25 +147,43 @@ const staged = Astro.slots.has('device');
       margin: auto 0 0;
     }
 
-    /* One wide button. It sits over the device, so its glass is thicker: more frost, more light. */
+    /* One wide button, as tall as the bar at the top and the same distance from the window's
+       edge, so both sit true in its corners. It lies over the device, so its glass is thicker. */
     .hero--stage .hero-action :global(.btn) {
-      --glass-top: rgba(255, 255, 255, 0.62);
-      --glass-bottom: rgba(255, 255, 255, 0.36);
+      --glass-top: rgba(255, 255, 255, 0.5);
+      --glass-bottom: rgba(255, 255, 255, 0.3);
       flex: 1;
-      min-height: 58px;
+      min-height: var(--action-height);
       font-size: 1.125rem;
-      -webkit-backdrop-filter: blur(26px) saturate(1.8) brightness(1.12);
-      backdrop-filter: blur(26px) saturate(1.8) brightness(1.12);
-      text-shadow: 0 1px 2px rgba(30, 24, 44, 0.28);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7) brightness(1.08);
+      backdrop-filter: blur(28px) saturate(1.7) brightness(1.08);
+      text-shadow: 0 1px 2px rgba(30, 24, 44, 0.3);
     }
 
-    /* The device rises out of the bottom edge and stays partly below it. */
+    /* The device rises out of the bottom edge and stays partly below it: always sunk to the same
+       line of its screen, just under the second event, where the button takes over. On a short
+       window the device gets smaller, never closer to the headline. */
+    .hero--stage {
+      /* The photograph softens under the line at the top as well as under the action. */
+      --coast-soft-top: 1;
+      --line-top: 104px;
+      --line-size: clamp(2.5rem, 1.1rem + 7.4vw, 3.25rem);
+      --action-height: calc(var(--control) + 2 * var(--bar-pad));
+      /* How much of the device's width shows above the button, and the room it has to do so. */
+      --device-shown: 1.5;
+      --device-room: calc(
+        100svh - 2 * var(--gutter) - var(--line-top) - env(safe-area-inset-top, 0px) - 3.12 * var(--line-size) - 28px -
+          var(--action-height) - var(--bar-gap)
+      );
+      --device-width: clamp(168px, calc(var(--device-room) / var(--device-shown)), min(72vw, 310px));
+    }
+
     .hero--stage .hero-device {
       display: block;
       position: absolute;
       left: 50%;
-      top: clamp(292px, 43%, 440px);
-      width: min(72%, 310px);
+      top: calc(100% - var(--action-height) - var(--bar-gap) - var(--device-shown) * var(--device-width));
+      width: var(--device-width);
       transform: translateX(-50%);
     }
 

@@ -1,6 +1,9 @@
 ---
-// One floating glass bar, the same object on every page: the mark, the audience switch, and one door.
-// At the top of a page the door is staff sign-in. Past the hero it becomes the page's action.
+// One floating bar of subtle Liquid Glass, the same object on every page: the mark, the audience
+// switch, and the page's action. Its ink turns dark over light sections and light over everything
+// else. Nothing in it comes or goes as the page scrolls. Where the bar is wide enough, the staff
+// door sits beside the action; on narrower screens staff sign in from the footer.
+// The action is clear glass over the first screen and takes the accent after it.
 import Mark from './Mark.astro';
 import Lockup from './Lockup.astro';
 import Action from './Action.astro';
@@ -12,7 +15,13 @@ interface Props {
 const { audience } = Astro.props;
 ---
 
-<header class="nav" data-audience={audience} transition:persist="nav">
+<header
+  class="nav"
+  data-audience={audience}
+  data-over="dark"
+  data-first-screen={audience !== 'none'}
+  transition:persist="nav"
+>
   <a class="nav-home" href="/" aria-label="neoQuad, home">
     <Mark wave class="nav-mark" />
     <Lockup wave class="nav-lockup" />
@@ -25,7 +34,7 @@ const { audience } = Astro.props;
   </nav>
 
   <div class="nav-end">
-    <a class="nav-signin" href={links.staff}>Sign in</a>
+    <a class="nav-signin" href={links.staff}>Staff sign in</a>
     <span class="nav-action nav-action--students"><Action to="app" tone="accent" compact /></span>
     <span class="nav-action nav-action--schools"><Action to="booking" tone="accent" compact /></span>
   </div>
@@ -49,71 +58,146 @@ const { audience } = Astro.props;
     });
   };
 
-  // Past the hero, the nav carries the page's action.
+  // While the hero is on screen the action stays clear glass (see .btn--accent in global.css).
   let heroWatch: IntersectionObserver | null = null;
   const watchHero = () => {
     heroWatch?.disconnect();
     const nav = document.querySelector<HTMLElement>('.nav');
     const hero = document.querySelector('.hero');
     if (!nav) return;
-    if (!hero) return nav.removeAttribute('data-past-hero');
-    heroWatch = new IntersectionObserver(([entry]) => nav.toggleAttribute('data-past-hero', !entry.isIntersecting), {
+    if (!hero) return nav.removeAttribute('data-first-screen');
+    heroWatch = new IntersectionObserver(([entry]) => nav.toggleAttribute('data-first-screen', entry.isIntersecting), {
       rootMargin: '-96px 0px 0px 0px',
     });
     heroWatch.observe(hero);
   };
 
+  // The glass takes its tone from what is under it: dark ink over light sections, light ink over
+  // photographs and black. One sample per frame at the centre of the bar, only while scrolling.
+  let sampling = false;
+  const readUnder = () => {
+    sampling = false;
+    const nav = document.querySelector<HTMLElement>('.nav');
+    if (!nav) return;
+    const box = nav.getBoundingClientRect();
+    const under = document.elementsFromPoint(innerWidth / 2, box.top + box.height / 2).find((el) => !nav.contains(el));
+    nav.dataset.over = under?.closest('.section--white, .section--mist') ? 'light' : 'dark';
+  };
+  const sampleUnder = () => {
+    if (sampling) return;
+    sampling = true;
+    requestAnimationFrame(readUnder);
+  };
+  addEventListener('scroll', sampleUnder, { passive: true });
+  addEventListener('resize', sampleUnder, { passive: true });
+
   // The pill starts moving the moment a switch begins, not when the new page lands.
   document.addEventListener('astro:before-preparation', (event) => {
     setAudience(event.to.pathname);
-    document.querySelector('.nav')?.removeAttribute('data-past-hero');
+    document.querySelector('.nav')?.setAttribute('data-first-screen', '');
   });
   document.addEventListener('astro:page-load', () => {
     setAudience(location.pathname);
     watchHero();
+    readUnder();
   });
 </script>
 
 <style>
+  /* Liquid Glass, kept quiet: mostly clear, a soft blur of what is behind, a thin bright rim.
+     Two tints are stacked, one for dark ground and one for light, and the bar fades
+     between them as the page moves under it (data-over, set in the script above). */
   .nav {
+    --ink: var(--white);
+    --track: rgba(255, 255, 255, 0.12);
+    --pill: var(--white);
+    --pill-ink: var(--black);
+
     position: fixed;
     z-index: 50;
-    top: calc(var(--gutter) + 12px + env(safe-area-inset-top, 0px));
+    isolation: isolate;
+    top: calc(var(--gutter) + var(--bar-gap) + env(safe-area-inset-top, 0px));
     left: 50%;
-    width: min(760px, calc(100% - 2 * (var(--gutter) + 12px)));
+    width: min(var(--bar-max, 760px), calc(100% - 2 * (var(--gutter) + var(--bar-gap))));
     transform: translateX(-50%);
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    padding: 6px;
+    padding: var(--bar-pad);
     border-radius: 999px;
-    color: var(--white);
-    background: rgba(24, 24, 26, 0.66);
-    -webkit-backdrop-filter: blur(28px) saturate(1.8);
-    backdrop-filter: blur(28px) saturate(1.8);
-    box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.16),
-      0 12px 40px rgba(0, 0, 0, 0.2);
+    color: var(--ink);
+    /* The blur lives on the bar itself. The bar is a named page-transition layer, and anything
+       inside such a layer has nothing behind it to blur. */
+    -webkit-backdrop-filter: blur(24px) saturate(1.7);
+    backdrop-filter: blur(24px) saturate(1.7);
+    transition: color 320ms ease;
     view-transition-name: nav;
+  }
+
+  .nav[data-over='light'] {
+    --ink: var(--graphite);
+    --track: rgba(28, 28, 30, 0.07);
+    --pill: var(--graphite);
+    --pill-ink: var(--white);
+  }
+
+  .nav::before,
+  .nav::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    transition: opacity 320ms ease;
+  }
+
+  /* Over photographs and black: clear glass with a breath of shade, so white ink always holds. */
+  .nav::before {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03)), rgba(18, 18, 22, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 10px 34px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Over white and mist: frosted clear, with a hairline so the edge is still there. */
+  .nav::after {
+    opacity: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 0 0 1px rgba(28, 28, 30, 0.07),
+      0 10px 34px rgba(28, 28, 30, 0.1);
+  }
+
+  .nav[data-over='light']::before {
+    opacity: 0;
+  }
+
+  .nav[data-over='light']::after {
+    opacity: 1;
   }
 
   .nav-home {
     justify-self: start;
     display: flex;
     align-items: center;
-    min-height: 44px;
+    justify-content: center;
+    min-width: var(--control);
+    min-height: var(--control);
     padding: 0 12px;
     border-radius: 999px;
     transition: opacity 160ms ease;
   }
 
   .nav-home:active {
-    opacity: 0.7;
+    opacity: 0.6;
   }
 
   .nav-mark {
-    height: 30px;
+    flex: none;
+    height: 28px;
     width: auto;
   }
 
@@ -135,20 +219,21 @@ const { audience } = Astro.props;
     }
   }
 
-  /* The switch. A white copy of the labels sits on top and is clipped to the active half,
-     so the colour of the text changes exactly where the pill is. On pages for neither
-     audience the pill closes to nothing. */
+  /* The switch. A second copy of the labels sits on top, in the pill's colours, clipped to the
+     active half, so the colour of the text changes exactly where the pill is. On pages for
+     neither audience the pill closes to nothing. */
   .switch {
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    height: 44px;
+    height: var(--control);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--track);
     font-size: 0.9375rem;
     font-weight: 500;
     user-select: none;
     -webkit-user-select: none;
+    transition: background-color 320ms ease;
   }
 
   .switch a,
@@ -161,14 +246,14 @@ const { audience } = Astro.props;
 
   .switch a {
     border-radius: 999px;
-    color: rgba(255, 255, 255, 0.86);
+    color: color-mix(in srgb, var(--ink) 82%, transparent);
     -webkit-touch-callout: none;
-    transition: color 160ms ease;
+    transition: color 320ms ease;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .switch a:hover {
-      color: var(--white);
+      color: var(--ink);
     }
   }
 
@@ -178,11 +263,14 @@ const { audience } = Astro.props;
     display: grid;
     grid-template-columns: 1fr 1fr;
     border-radius: 999px;
-    background: var(--white);
-    color: var(--black);
+    background: var(--pill);
+    color: var(--pill-ink);
     pointer-events: none;
     clip-path: inset(3px 50% 3px 50% round 999px);
-    transition: clip-path 520ms var(--ease-glass);
+    transition:
+      clip-path 520ms var(--ease-glass),
+      background-color 320ms ease,
+      color 320ms ease;
   }
 
   .nav[data-audience='students'] .switch-pill {
@@ -196,30 +284,27 @@ const { audience } = Astro.props;
   /* The pill gives a little under the finger before it travels. */
   .nav[data-audience='students'] .switch:active .switch-pill {
     clip-path: inset(4px calc(50% + 1px) 4px 5px round 999px);
-    transition-duration: 160ms;
+    transition-duration: 160ms, 320ms, 320ms;
   }
 
   .nav[data-audience='schools'] .switch:active .switch-pill {
     clip-path: inset(4px 5px 4px calc(50% + 1px) round 999px);
-    transition-duration: 160ms;
+    transition-duration: 160ms, 320ms, 320ms;
   }
 
-  /* One cell, two occupants: sign-in at the top of the page, the action once past the hero. */
   .nav-end {
     justify-self: end;
-    display: grid;
-    justify-items: end;
-    align-items: center;
-  }
-
-  .nav-end > * {
-    grid-area: 1 / 1;
-  }
-
-  .nav-signin {
     display: flex;
     align-items: center;
-    min-height: 44px;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  /* The staff door needs a wide bar. Below that it is in the footer. */
+  .nav-signin {
+    display: none;
+    align-items: center;
+    min-height: var(--control);
     padding: 0 18px;
     border-radius: 999px;
     font-size: 0.9375rem;
@@ -228,11 +313,8 @@ const { audience } = Astro.props;
     user-select: none;
     -webkit-user-select: none;
     transition:
-      opacity 260ms ease 60ms,
-      filter 260ms ease 60ms,
       transform 160ms var(--ease-out),
-      background-color 160ms ease,
-      visibility 0s;
+      background-color 160ms ease;
   }
 
   .nav-signin:active {
@@ -241,21 +323,22 @@ const { audience } = Astro.props;
 
   @media (hover: hover) and (pointer: fine) {
     .nav-signin:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: color-mix(in srgb, var(--ink) 9%, transparent);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .nav {
+      --bar-max: 880px;
+    }
+
+    .nav-signin {
+      display: flex;
     }
   }
 
   .nav-action {
     display: none;
-    opacity: 0;
-    visibility: hidden;
-    filter: blur(4px);
-    transform: scale(0.96);
-    transition:
-      opacity 180ms ease,
-      filter 180ms ease,
-      transform 180ms var(--ease-out),
-      visibility 0s linear 180ms;
   }
 
   .nav[data-audience='students'] .nav-action--students,
@@ -263,36 +346,30 @@ const { audience } = Astro.props;
     display: flex;
   }
 
-  .nav[data-past-hero]:not([data-audience='none']) .nav-action {
-    opacity: 1;
-    visibility: visible;
-    filter: none;
-    transform: none;
-    transition:
-      opacity 260ms ease 60ms,
-      filter 260ms ease 60ms,
-      transform 260ms var(--ease-out) 60ms,
-      visibility 0s;
-  }
+  /* The smallest phones: everything a little closer, nothing dropped. */
+  @media (max-width: 359px) {
+    .nav-home {
+      padding: 0 6px;
+    }
 
-  .nav[data-past-hero]:not([data-audience='none']) .nav-signin {
-    opacity: 0;
-    visibility: hidden;
-    filter: blur(4px);
-    transition:
-      opacity 180ms ease,
-      filter 180ms ease,
-      visibility 0s linear 180ms;
+    .switch {
+      font-size: 0.875rem;
+    }
+
+    .switch a,
+    .switch-pill span {
+      padding: 0 11px;
+    }
+
+    .nav-action :global(.btn--compact) {
+      padding: 0 14px;
+      font-size: 0.875rem;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .switch-pill {
       transition: none;
-    }
-    .nav-action,
-    .nav[data-past-hero]:not([data-audience='none']) .nav-action {
-      filter: none;
-      transform: none;
     }
   }
 </style>

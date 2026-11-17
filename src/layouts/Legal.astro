@@ -230,7 +230,8 @@ const other = name === 'privacy' ? { href: '/terms', label: 'Terms of Service' }
   .prose :global(.fact),
   .prose :global(.e) {
     padding: 22px 24px 24px;
-    border-radius: 20px;
+    border-radius: calc(20px * var(--corner-reach));
+    corner-shape: var(--corner);
     background: var(--mist);
   }
 

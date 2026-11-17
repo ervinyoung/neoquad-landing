@@ -157,7 +157,8 @@ const views = [
     overflow-y: hidden;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
-    border-radius: clamp(12px, 1.8vw, 24px);
+    border-radius: calc(clamp(12px, 1.8vw, 24px) * var(--corner-reach));
+    corner-shape: var(--corner);
     background: #f4f3f0;
     box-shadow:
       0 0 0 1px var(--rule),

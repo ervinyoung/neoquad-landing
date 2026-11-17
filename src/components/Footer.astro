@@ -80,6 +80,12 @@ import { links } from '../config';
     color: var(--white);
   }
 
+  @media (max-width: 379px) {
+    .footer-links {
+      grid-template-columns: 1fr;
+    }
+  }
+
   .footer-bottom {
     display: flex;
     flex-wrap: wrap;

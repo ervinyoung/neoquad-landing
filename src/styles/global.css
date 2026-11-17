@@ -26,7 +26,22 @@
   /* Layout */
   --margin: clamp(20px, 5.2vw, 80px);
   --gutter: clamp(8px, 1.2vw, 16px);
-  --window-radius: clamp(22px, 4.2vmin, 40px);
+
+  /* Corners. Two rules, kept everywhere:
+     1. A corner inside another is the outer radius minus the space between them. The window is
+        drawn around the floating bar (and the wide hero button): half a control, the bar's
+        padding, the gap to the window's edge.
+     2. Rounded rectangles are smoothed the way Figma draws 60%: the curve starts 1.6x further
+        from the corner and tightens into it. Every rounded rectangle is written as
+          border-radius: calc(<radius> * var(--corner-reach));
+          corner-shape: var(--corner);
+        Browsers that cannot draw the shape keep the plain radius. Capsules and circles stay round. */
+  --control: 44px;
+  --bar-pad: 6px;
+  --bar-gap: 12px;
+  --window-radius: calc(var(--control) / 2 + var(--bar-pad) + var(--bar-gap));
+  --corner: round;
+  --corner-reach: 1;
   --section: clamp(88px, 13vw, 184px);
   --measure: 1240px;
 
@@ -34,6 +49,23 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+  /* How far a [data-reveal] element rises as it fades in. A scroller holding one leaves this much room. */
+  --reveal-rise: 14px;
+}
+
+@supports (corner-shape: superellipse(2)) {
+  :root {
+    --corner: superellipse(1.8);
+    --corner-reach: 1.6;
+  }
+}
+
+/* The smallest phones: the bar sits closer to the edge, and the window follows it. */
+@media (max-width: 359px) {
+  :root {
+    --bar-pad: 5px;
+    --bar-gap: 4px;
+  }
 }
 
 *,
@@ -169,6 +201,17 @@ button {
   transition: background-size 320ms var(--ease-out);
 }
 
+/* The underline hugs the text; the place you can tap is finger-sized. */
+.link {
+  position: relative;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  inset: -12px -6px;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .link:hover {
     --drawn: 100%;
@@ -202,9 +245,30 @@ button {
 }
 
 /* ---------- Button: Liquid Glass ----------
-   Clear glass by default; --accent tints it. The glass bends the light of whatever is behind it
+   Clear glass by default; --accent tints it. The glass colours are registered so the tint can fade. The glass bends the light of whatever is behind it
    (backdrop blur and saturation), carries a bright rim along the top and a faint one below, and
    has a specular highlight that follows the pointer. Pressing it sinks it. */
+
+@property --glass-top {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+@property --glass-bottom {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+@property --glass-rim {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+@property --glass-shadow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
 
 .btn {
   --glass-top: rgba(255, 255, 255, 0.5);
@@ -243,7 +307,10 @@ button {
     0 12px 32px -6px var(--glass-shadow);
   transition:
     transform 160ms var(--ease-out),
-    box-shadow 200ms ease;
+    --glass-top 320ms ease,
+    --glass-bottom 320ms ease,
+    --glass-rim 320ms ease,
+    --glass-shadow 320ms ease;
 }
 
 /* The specular highlight. --gx / --gy are set from the pointer by scripts/glass.ts. */
@@ -266,7 +333,8 @@ button {
   transform: scale(0.97);
 }
 
-.btn--accent {
+/* The accent appears only below the first screen: the nav holds it back while the hero is in view. */
+.btn--accent:not([data-first-screen] *) {
   --glass-top: rgba(var(--accent-rgb), 0.78);
   --glass-bottom: rgba(var(--accent-rgb), 0.92);
   --glass-rim: rgba(255, 255, 255, 0.5);
@@ -317,7 +385,8 @@ html[data-ios] .cta-web {
 .window {
   position: relative;
   overflow: hidden;
-  border-radius: var(--window-radius);
+  border-radius: calc(var(--window-radius) * var(--corner-reach));
+  corner-shape: var(--corner);
   background: var(--graphite);
   isolation: isolate;
 }
@@ -335,7 +404,7 @@ html[data-ios] .cta-web {
 
 html.js [data-reveal] {
   opacity: 0;
-  transform: translateY(14px);
+  transform: translateY(var(--reveal-rise));
   transition:
     opacity 800ms var(--ease-out),
     transform 800ms var(--ease-out);
@@ -422,7 +491,8 @@ html[data-dir='back'] {
 }
 
 ::view-transition-group(coast) {
-  border-radius: var(--window-radius);
+  border-radius: calc(var(--window-radius) * var(--corner-reach));
+  corner-shape: var(--corner);
   overflow: hidden;
   animation-duration: 900ms;
   animation-timing-function: var(--ease-glass);
@@ -484,6 +554,12 @@ html[data-dir='back'] {
 
 ::view-transition-new(root) {
   animation: page-in 420ms ease 120ms both;
+}
+
+/* While pages change, the browser moves the bar's blur onto this layer, which is a plain
+   rectangle unless it is given the bar's shape. */
+::view-transition-group(nav) {
+  border-radius: 999px;
 }
 
 ::view-transition-old(nav),

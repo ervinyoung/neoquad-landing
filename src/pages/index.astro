@@ -115,9 +115,13 @@ const qr = await QRCode.toString(links.appStore, {
     grid-auto-flow: column;
     grid-auto-columns: min(78%, 340px);
     gap: 16px;
-    margin: clamp(56px, 8vw, 112px) calc(-1 * var(--margin)) 0;
-    padding: 0 var(--margin);
+    /* It scrolls sideways only. The cards rise into place as they appear, so the row keeps room
+       below them for that (and gives it back with the margin), or their last line would be cut. */
+    margin: clamp(56px, 8vw, 112px) calc(-1 * var(--margin)) calc(-1 * var(--reveal-rise));
+    padding: 0 var(--margin) var(--reveal-rise);
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
     scroll-padding-inline: var(--margin);
     scrollbar-width: none;
@@ -134,7 +138,8 @@ const qr = await QRCode.toString(links.appStore, {
 
   /* The whole phone, standing in its own quiet room. With a pointer, it rises a little to meet it. */
   .screen-frame {
-    border-radius: var(--window-radius);
+    border-radius: calc(var(--window-radius) * var(--corner-reach));
+    corner-shape: var(--corner);
     background: var(--mist);
     padding: 9% 13% 8%;
   }
@@ -166,6 +171,7 @@ const qr = await QRCode.toString(links.appStore, {
       grid-template-columns: repeat(3, 1fr);
       gap: clamp(20px, 2.4vw, 32px);
       margin-inline: 0;
+      margin-bottom: 0;
       padding: 0;
       overflow: visible;
     }
@@ -211,7 +217,8 @@ const qr = await QRCode.toString(links.appStore, {
     width: 208px;
     height: 208px;
     padding: 20px;
-    border-radius: 28px;
+    border-radius: calc(28px * var(--corner-reach));
+    corner-shape: var(--corner);
     background: var(--white);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
     transform-origin: 50% -14px;
