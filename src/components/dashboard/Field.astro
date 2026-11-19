@@ -1,0 +1,50 @@
+---
+// A filled-in field of the staff site: a select (with its chevron), an input with a trailing icon, or a plain box.
+import Icon, { type IconName } from './Icon.astro';
+
+interface Props {
+  icon?: IconName;
+  muted?: boolean;
+  class?: string;
+}
+const { icon, muted = false, class: className } = Astro.props;
+---
+
+<span class:list={['field', muted && 'muted', className]}>
+  <span class="value"><slot /></span>
+  {icon && <Icon name={icon} />}
+</span>
+
+<style>
+  .field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--u) * 10);
+    height: calc(var(--u) * 44);
+    padding: 0 calc(var(--u) * 4) 0 calc(var(--u) * 17);
+    border: calc(var(--u) * 1.5) solid var(--d-field-line);
+    border-radius: calc(var(--u) * 10 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-card);
+    color: var(--d-ink);
+    font-size: calc(var(--u) * 15);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .muted {
+    color: var(--d-muted);
+    font-weight: 400;
+  }
+
+  .field :global(.icon) {
+    font-size: calc(var(--u) * 14);
+    stroke-width: 1.6;
+  }
+</style>

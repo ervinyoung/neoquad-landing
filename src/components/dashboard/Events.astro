@@ -1,0 +1,222 @@
+---
+// Events: the month calendar of every approved event.
+import Icon from './Icon.astro';
+import Field from './Field.astro';
+import Segmented from './Segmented.astro';
+import { calendar } from './sample';
+
+const { year, month, day } = calendar.firstDay;
+const days = Array.from({ length: 42 }, (_, i) => {
+  const date = new Date(Date.UTC(year, month, day + i));
+  const key = date.toISOString().slice(0, 10);
+  return {
+    day: date.getUTCDate(),
+    inMonth: date.getUTCMonth() === calendar.month,
+    weekend: i % 7 === 0 || i % 7 === 6,
+    events: calendar.events[key] ?? [],
+  };
+});
+---
+
+<header class="head">
+  <div>
+    <h3 class="title">Events</h3>
+    <p class="sub">Every approved event — click one for the full record.</p>
+  </div>
+  <Segmented options={['List', 'Month']} active="Month" />
+  <Field muted class="search">Search events</Field>
+  <Field icon="chevron" class="org">All organizations</Field>
+</header>
+
+<div class="month">
+  <h4>{calendar.title}</h4>
+  <span class="nav">
+    <span class="tool"><Icon name="chevron-left" /></span>
+    <span class="tool">Today</span>
+    <span class="tool"><Icon name="chevron-right" /></span>
+    <span class="tool">Print / PDF</span>
+  </span>
+</div>
+
+<ol class="days" aria-hidden="true">
+  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => <li>{d}</li>)}
+</ol>
+
+<ol class="cal">
+  {
+    days.map((d) => (
+      <li class:list={[!d.inMonth && 'out', d.weekend && 'weekend']}>
+        <span class="n">{d.day}</span>
+        {d.events.map(([time, title]) => (
+          <span class="ev">
+            <b>{time}</b>
+            {title}
+          </span>
+        ))}
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .head {
+    position: absolute;
+    inset: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 10);
+    height: calc(var(--u) * 103);
+    padding: 0 calc(var(--u) * 51) calc(var(--u) * 3) calc(var(--u) * 52);
+    border-bottom: calc(var(--u) * 1.5) solid var(--d-line);
+  }
+
+  .head > div {
+    margin-right: auto;
+  }
+
+  .title {
+    font-size: calc(var(--u) * 25.3);
+    font-weight: 600;
+    line-height: calc(var(--u) * 30);
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    margin-top: calc(var(--u) * 11);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 15.5);
+  }
+
+  .head :global(.search) {
+    width: calc(var(--u) * 252);
+  }
+
+  .head :global(.org) {
+    width: calc(var(--u) * 173);
+  }
+
+  .month {
+    position: absolute;
+    top: calc(var(--u) * 125);
+    left: calc(var(--u) * 70);
+    right: calc(var(--u) * 69);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(var(--u) * 35);
+  }
+
+  h4 {
+    font-size: calc(var(--u) * 28);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .nav {
+    display: flex;
+    gap: calc(var(--u) * 9);
+  }
+
+  .tool {
+    display: grid;
+    place-items: center;
+    min-width: calc(var(--u) * 31);
+    height: calc(var(--u) * 35);
+    padding: 0 calc(var(--u) * 12);
+    border: calc(var(--u) * 1.5) solid var(--d-field-line);
+    border-radius: calc(var(--u) * 8 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-bg);
+    font-size: calc(var(--u) * 14.5);
+    font-weight: 500;
+  }
+
+  .tool:nth-child(odd) {
+    padding: 0;
+    width: calc(var(--u) * 31);
+  }
+
+  .tool:last-child {
+    width: auto;
+    padding: 0 calc(var(--u) * 12);
+  }
+
+  .tool :global(.icon) {
+    font-size: calc(var(--u) * 13);
+  }
+
+  .days,
+  .cal {
+    position: absolute;
+    left: calc(var(--u) * 70);
+    display: grid;
+    grid-template-columns: repeat(7, calc(var(--u) * 200));
+    column-gap: calc(var(--u) * 6);
+  }
+
+  .days {
+    top: calc(var(--u) * 168);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 11.5);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .cal {
+    top: calc(var(--u) * 191);
+    grid-auto-rows: calc(var(--u) * 117);
+    row-gap: calc(var(--u) * 7);
+  }
+
+  .cal li {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--u) * 8.5);
+    padding: calc(var(--u) * 7) calc(var(--u) * 8);
+    overflow: hidden;
+    border: calc(var(--u) * 1.5) solid var(--d-cell-line);
+    border-radius: calc(var(--u) * 8 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-card);
+  }
+
+  .cal .weekend {
+    background: var(--d-bg);
+  }
+
+  .cal .out {
+    background: var(--d-out);
+    border-color: var(--d-out-line);
+  }
+
+  .n {
+    color: var(--d-day);
+    font-size: calc(var(--u) * 13);
+    font-weight: 600;
+    line-height: calc(var(--u) * 14);
+  }
+
+  .out .n,
+  .out .ev {
+    opacity: 0.4;
+  }
+
+  .ev {
+    overflow: hidden;
+    padding-left: calc(var(--u) * 8);
+    color: var(--d-ink);
+    font-size: calc(var(--u) * 12);
+    font-weight: 500;
+    line-height: calc(var(--u) * 16.5);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ev b {
+    margin-right: calc(var(--u) * 6);
+    color: var(--d-blue);
+    font-weight: 600;
+  }
+</style>

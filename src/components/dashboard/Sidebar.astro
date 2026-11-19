@@ -1,0 +1,209 @@
+---
+// The staff site's sidebar. The highlighted item follows the open screen (`--at`, set by Dashboard).
+import Mark from '../Mark.astro';
+import Icon, { type IconName } from './Icon.astro';
+import sbcc from '../../assets/logo/sbcc-black.svg?raw';
+import { account, initials } from './sample';
+
+const groups: { label: string; top: number; items: { icon: IconName; label: string; key?: string }[] }[] = [
+  {
+    label: 'Work',
+    top: 88,
+    items: [
+      { icon: 'trend', label: 'Insights', key: 'insights' },
+      { icon: 'inbox', label: 'Publishing' },
+      { icon: 'eye', label: 'Public' },
+      { icon: 'calendar', label: 'Events', key: 'events' },
+      { icon: 'plus', label: 'New event', key: 'new-event' },
+    ],
+  },
+  {
+    label: 'Admin',
+    top: 329,
+    items: [
+      { icon: 'user', label: 'People' },
+      { icon: 'building', label: 'Organizations' },
+      { icon: 'list', label: 'Audit' },
+    ],
+  },
+];
+---
+
+<div class="side">
+  <div class="brand">
+    <Mark class="seed" />
+    <span class="plus">+</span>
+    <span class="sbcc" set:html={sbcc} />
+  </div>
+
+  {
+    groups.map((group, g) => (
+      <div class="group" style={`--top:${group.top}`}>
+        <p class="label">{group.label}</p>
+        <ul>
+          {group.items.map((item) => (
+            <li data-item={item.key}>
+              <Icon name={item.icon} />
+              {item.label}
+            </li>
+          ))}
+        </ul>
+        {g === 0 && <span class="current" aria-hidden="true" />}
+      </div>
+    ))
+  }
+
+  <div class="foot">
+    <p class="appearance"><Icon name="appearance" />Appearance</p>
+    <p class="who"><span class="avatar">{initials}</span>{account.email}</p>
+    <p class="out">Sign out</p>
+  </div>
+</div>
+
+<style>
+  .side {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--u) * 286);
+    border-right: calc(var(--u) * 1.5) solid var(--d-line);
+    color: var(--d-nav);
+    font-size: calc(var(--u) * 15.5);
+    line-height: 1;
+  }
+
+  .brand {
+    position: absolute;
+    top: calc(var(--u) * 26);
+    left: calc(var(--u) * 24);
+    display: flex;
+    align-items: center;
+    height: calc(var(--u) * 30);
+  }
+
+  .seed {
+    width: calc(var(--u) * 32);
+    height: calc(var(--u) * 32);
+    color: var(--d-ink);
+  }
+
+  .plus {
+    margin: 0 calc(var(--u) * 10) 0 calc(var(--u) * 8);
+    color: var(--d-faint);
+    font-size: calc(var(--u) * 15);
+  }
+
+  .sbcc :global(svg) {
+    width: calc(var(--u) * 32);
+    height: auto;
+  }
+
+  .group {
+    position: absolute;
+    top: calc(var(--u) * var(--top));
+    left: calc(var(--u) * 15);
+    right: calc(var(--u) * 15);
+  }
+
+
+  .label {
+    padding-left: calc(var(--u) * 12);
+    color: var(--d-faint);
+    font-size: calc(var(--u) * 13.5);
+  }
+
+  ul {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(var(--u) * 13);
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 13);
+    height: calc(var(--u) * 37.25);
+    padding-left: calc(var(--u) * 14);
+  }
+
+  li :global(.icon) {
+    font-size: calc(var(--u) * 16);
+    stroke-width: 1.6;
+  }
+
+  /* The highlight slides between items, so the switch reads as one app changing page. */
+  .current {
+    position: absolute;
+    top: calc(var(--u) * 25.5);
+    left: 0;
+    width: 100%;
+    height: calc(var(--u) * 38);
+    border-radius: calc(var(--u) * 9 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-active);
+    transform: translateY(calc(var(--u) * 37.25 * var(--at, 0)));
+    transition: transform 320ms var(--ease-out);
+  }
+
+  :global([data-active='insights']) li[data-item='insights'],
+  :global([data-active='events']) li[data-item='events'],
+  :global([data-active='new-event']) li[data-item='new-event'] {
+    color: var(--d-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .current {
+      transition: none;
+    }
+  }
+
+  .foot {
+    position: absolute;
+    inset: calc(var(--u) * 910) calc(var(--u) * 15) 0;
+    border-top: calc(var(--u) * 1.5) solid var(--d-line);
+  }
+
+  .foot p {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .appearance {
+    top: calc(var(--u) * 26);
+    left: calc(var(--u) * 23);
+    gap: calc(var(--u) * 14);
+  }
+
+  .appearance :global(.icon) {
+    font-size: calc(var(--u) * 15);
+    stroke-width: 1.2;
+    color: var(--d-faint);
+  }
+
+  .who {
+    top: calc(var(--u) * 75);
+    left: calc(var(--u) * 18);
+    gap: calc(var(--u) * 12);
+    color: var(--d-ink);
+    font-size: calc(var(--u) * 14.5);
+  }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: calc(var(--u) * 32);
+    height: calc(var(--u) * 32);
+    border-radius: 50%;
+    background: var(--d-active);
+    font-size: calc(var(--u) * 11.5);
+    font-weight: 600;
+  }
+
+  .out {
+    top: calc(var(--u) * 135);
+    left: calc(var(--u) * 9);
+    color: var(--d-ink);
+    font-size: calc(var(--u) * 14);
+  }
+</style>

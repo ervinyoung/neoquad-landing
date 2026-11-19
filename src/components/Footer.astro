@@ -58,14 +58,15 @@ import { links } from '../config';
   .footer-links {
     display: grid;
     grid-template-columns: repeat(2, auto);
-    gap: 4px 56px;
+    gap: 0 56px;
     font-size: 1rem;
   }
 
+  /* Rows touch, so each link's tap area is a full 44px without spreading the list. */
   .footer-links a {
     display: inline-flex;
     align-items: center;
-    min-height: 40px;
+    min-height: 44px;
     color: var(--secondary-on-dark);
     transition: color 160ms ease;
   }

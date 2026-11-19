@@ -1,18 +1,20 @@
 ---
-// The staff dashboard, as it is today: real screens, switched by tabs.
-import { Image } from 'astro:assets';
-import insights from '../assets/dashboard/insights.png';
-import events from '../assets/dashboard/events.png';
-import newEvent from '../assets/dashboard/new-event.png';
+// The staff dashboard, drawn in HTML from one set of sample figures (dashboard/sample.ts) and switched by tabs.
+// The screen is laid out on the staff site's own 1862 x 1086 grid and scaled to any width:
+// every length is `calc(var(--u) * <px on that grid>)`, so it stays sharp at every size.
+import Sidebar from './dashboard/Sidebar.astro';
+import Insights from './dashboard/Insights.astro';
+import Events from './dashboard/Events.astro';
+import NewEvent from './dashboard/NewEvent.astro';
 
 const views = [
-  { key: 'insights', label: 'Insights', image: insights, alt: 'Insights: students involved, RSVPs, first-timers and a map of where events are' },
-  { key: 'events', label: 'Events', image: events, alt: 'Events: a month calendar of every approved event' },
-  { key: 'new-event', label: 'New event', image: newEvent, alt: 'New event: a short form for title, organization, date and place' },
+  { key: 'insights', label: 'Insights', view: Insights, item: 0 },
+  { key: 'events', label: 'Events', view: Events, item: 3 },
+  { key: 'new-event', label: 'New event', view: NewEvent, item: 4 },
 ];
 ---
 
-<div class="dash" data-dash data-active={views[0].key}>
+<div class="dash" data-dash data-active={views[0].key} style={`--at:${views[0].item}`}>
   <div class="dash-tabs" role="tablist" aria-label="Dashboard screens" style={`--count:${views.length}`}>
     {
       views.map((view, i) => (
@@ -25,6 +27,7 @@ const views = [
           tabindex={i === 0 ? 0 : -1}
           data-key={view.key}
           data-index={i}
+          data-item={view.item}
         >
           {view.label}
         </button>
@@ -35,27 +38,25 @@ const views = [
 
   <div class="dash-stage">
     <div class="dash-track">
-    {
-      views.map((view, i) => (
-        <div
-          class="dash-panel"
-          role="tabpanel"
-          id={`dash-panel-${view.key}`}
-          aria-labelledby={`dash-tab-${view.key}`}
-          data-key={view.key}
-          data-current={i === 0 ? '' : undefined}
-          aria-hidden={i === 0 ? 'false' : 'true'}
-        >
-          <Image
-            src={view.image}
-            alt={view.alt}
-            widths={[720, 1100, 1862]}
-            sizes="(min-width: 1320px) 1240px, 92vw"
-            loading="lazy"
-          />
-        </div>
-      ))
-    }
+      <div class="dash-screen">
+        <Sidebar />
+        {
+          views.map(({ key, view: View }, i) => (
+            <div
+              class="dash-panel"
+              role="tabpanel"
+              id={`dash-panel-${key}`}
+              aria-labelledby={`dash-tab-${key}`}
+              data-key={key}
+              data-current={i === 0 ? '' : undefined}
+              aria-hidden={i === 0 ? 'false' : 'true'}
+              inert={i === 0 ? undefined : true}
+            >
+              <View />
+            </div>
+          ))
+        }
+      </div>
     </div>
   </div>
 </div>
@@ -70,6 +71,8 @@ const views = [
 
       const select = (tab: HTMLButtonElement, focus = false) => {
         const key = tab.dataset.key!;
+        dash.dataset.active = key;
+        dash.style.setProperty('--at', tab.dataset.item!);
         list.style.setProperty('--index', tab.dataset.index!);
         tabs.forEach((t) => {
           const on = t === tab;
@@ -79,18 +82,26 @@ const views = [
         panels.forEach((p) => {
           const on = p.dataset.key === key;
           p.toggleAttribute('data-current', on);
+          p.toggleAttribute('inert', !on);
           p.setAttribute('aria-hidden', String(!on));
         });
         if (focus) tab.focus();
       };
 
+      const keys: Record<string, (i: number) => number> = {
+        ArrowRight: (i) => (i + 1) % tabs.length,
+        ArrowLeft: (i) => (i - 1 + tabs.length) % tabs.length,
+        Home: () => 0,
+        End: () => tabs.length - 1,
+      };
+
       tabs.forEach((tab, i) => {
         tab.addEventListener('click', () => select(tab));
         tab.addEventListener('keydown', (event) => {
-          const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-          if (!step) return;
+          const to = keys[event.key];
+          if (!to) return;
           event.preventDefault();
-          select(tabs[(i + step + tabs.length) % tabs.length], true);
+          select(tabs[to(i)], true);
         });
       });
     });
@@ -112,6 +123,12 @@ const views = [
     background: var(--mist);
     font-size: 0.9375rem;
     font-weight: 500;
+    transition: transform 160ms var(--ease-out);
+  }
+
+  /* The whole control gives under the finger, so a press feels heard before the pill moves. */
+  .dash-tabs:has(button:active) {
+    transform: scale(0.98);
   }
 
   .dash-tabs button,
@@ -127,11 +144,23 @@ const views = [
     border: 0;
     border-radius: 999px;
     background: none;
-    color: var(--secondary);
+    color: var(--graphite);
     font: inherit;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  /* Labels dim with opacity, not colour, so the hover change stays on the compositor. */
+  .dash-tabs button {
+    opacity: 0.62;
+    transition: opacity 160ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dash-tabs button:hover {
+      opacity: 1;
+    }
   }
 
   .dash-pill {
@@ -150,19 +179,20 @@ const views = [
     transition: clip-path 420ms var(--ease-glass);
   }
 
-  /* On a phone the screen is shown at twice the width and pans sideways, so it stays readable. */
+  /* The frame: one hairline drawn by the frame itself, the screen clipped by the same smoothed corner.
+     On a phone the screen is shown at twice the width and pans sideways, so it stays readable. */
   .dash-stage {
+    --radius: calc(clamp(12px, 1.8vw, 24px) * var(--corner-reach));
     margin-top: clamp(24px, 3vw, 40px);
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
-    border-radius: calc(clamp(12px, 1.8vw, 24px) * var(--corner-reach));
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
     corner-shape: var(--corner);
-    background: #f4f3f0;
-    box-shadow:
-      0 0 0 1px var(--rule),
-      0 40px 80px -40px rgba(28, 28, 30, 0.28);
+    background: var(--d-bg);
+    box-shadow: 0 40px 80px -40px rgba(28, 28, 30, 0.28);
   }
 
   .dash-stage::-webkit-scrollbar {
@@ -170,9 +200,8 @@ const views = [
   }
 
   .dash-track {
-    position: relative;
     width: 200%;
-    aspect-ratio: 1862 / 1086;
+    container-type: inline-size;
   }
 
   @media (min-width: 700px) {
@@ -185,32 +214,78 @@ const views = [
     }
   }
 
-  /* Blur bridges the two screens, so the swap reads as one surface changing. */
+  /* The staff site's palette, light mode. */
+  .dash {
+    --d-bg: #f4f2ee;
+    --d-card: #ffffff;
+    --d-line: #e3e1dd;
+    --d-card-line: #ebe9e6;
+    --d-hair: #efeeec;
+    --d-field-line: #dcdad6;
+    --d-cell-line: #e9e8e4;
+    --d-chip-line: #d0d0d0;
+    --d-well: #e8e6e2;
+    --d-active: #e9e5dd;
+    --d-badge: #f1f1f1;
+    --d-out: #f8f7f3;
+    --d-out-line: #eeede9;
+    --d-track: #dbdad6;
+    --d-ink: #111111;
+    --d-nav: #5f5d59;
+    --d-seg: #5c5b57;
+    --d-muted: #747474;
+    --d-label: #6b6b6b;
+    --d-faint: #9b9995;
+    --d-day: #555555;
+    --d-good: #1e8048;
+    --d-bad: #b4372c;
+    --d-blue: #1769c2;
+    --d-live: #f0284a;
+    --d-upcoming: #2f9bf0;
+    --d-progress: #34d530;
+  }
+
+  .dash-screen {
+    --u: calc(100cqw / 1862);
+    position: relative;
+    aspect-ratio: 1862 / 1086;
+    overflow: hidden;
+    color: var(--d-ink);
+    font-family: var(--sans);
+    line-height: 1.25;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  :global(:where(.dash-screen h4)) {
+    margin: 0;
+  }
+
+  /* The open screen crossfades; the sidebar stays put, as it does on the staff site. */
   .dash-panel {
     position: absolute;
-    inset: 0;
+    inset: 0 0 0 calc(var(--u) * 287.5);
     opacity: 0;
-    filter: blur(6px);
-    transition:
-      opacity 260ms ease,
-      filter 260ms ease;
+    transition: opacity 220ms ease;
   }
 
   .dash-panel[data-current] {
     opacity: 1;
-    filter: none;
-  }
-
-  .dash-panel :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .dash-pill,
-    .dash-panel {
+    .dash-tabs,
+    .dash-pill {
       transition: none;
+    }
+
+    .dash-tabs:has(button:active) {
+      transform: none;
+    }
+
+    .dash-panel {
+      transition-duration: 120ms;
     }
   }
 </style>

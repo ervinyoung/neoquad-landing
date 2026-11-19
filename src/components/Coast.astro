@@ -1,8 +1,10 @@
 ---
 // The same coast in two lights. Name the scene; everything else is handled here.
 //
-//   scene="dusk"       The picture leads: the sharp dusk photograph, with a moving sea, drifting
-//                      clouds, and a progressive blur rising from the bottom, under the headline.
+//   scene="dusk"       The picture leads: the sharp dusk photograph as a living place (swell on the
+//                      sea, clouds on the wind, a slow camera; see living-coast.ts), and a progressive
+//                      blur rising from the bottom, under the headline. Its map, plate and sky come from
+//                      tools/coast-maps.py, which also holds the horizon and the sky's reach given below.
 //   scene="blue-hour"  The words lead: the photograph blurred to light and colour, drifting slowly.
 //
 // Each scene also fetches the other one quietly, so switching pages never lands on an empty window.
@@ -11,7 +13,9 @@ import { Image, getImage } from 'astro:assets';
 import dusk from '../assets/photos/dusk.jpg';
 import duskSoft from '../assets/photos/dusk-soft.jpg';
 import duskSofter from '../assets/photos/dusk-softer.jpg';
-import duskMask from '../assets/photos/dusk-mask.png';
+import duskMap from '../assets/photos/dusk-map.webp';
+import duskPlate from '../assets/photos/dusk-plate.webp';
+import duskSky from '../assets/photos/dusk-sky.webp';
 import blueHour from '../assets/photos/bluehour-blur.jpg';
 
 interface Props {
@@ -50,7 +54,11 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
     <div
       class="coast coast--dusk"
       data-living-coast
-      data-mask={duskMask.src}
+      data-map={duskMap.src}
+      data-plate={duskPlate.src}
+      data-sky={duskSky.src}
+      data-sky-reach="0.1"
+      data-horizon="0.5426"
       data-blur={JSON.stringify(blur)}
       data-focus-x="0.38"
       data-focus-y="1"
@@ -136,21 +144,6 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
     object-position: 38% 100%;
   }
 
-  /* The whole scene eases toward you and back, so the picture is never quite still. */
-  .coast--dusk {
-    transform-origin: 62% 58%;
-    animation: approach 38s ease-in-out infinite alternate;
-  }
-
-  @keyframes approach {
-    from {
-      transform: scale(1);
-    }
-    to {
-      transform: scale(1.06);
-    }
-  }
-
   /* The living layer fades in over the still picture once its first frame is drawn. It draws the
      photograph and both blurs itself, so the softened parts move with the rest. */
   .coast-live {
@@ -188,27 +181,39 @@ const warm = { loading: 'eager', fetchpriority: 'low', alt: '', class: 'coast-wa
     --end-t: var(--softer-top-end);
   }
 
-  /* Blue hour: only light and colour, so it may drift, slowly enough to be felt before it is seen. */
+  /* Blue hour: only light and colour, so the camera alone moves, on the same slow periods as the dusk
+     camera (living-coast.ts): a push breathing over 97s, a drift over 71s. Different periods, so the
+     two never turn back together. Reduce Motion keeps only the push. */
   .coast--blue-hour :global(.coast-photo) {
     inset: -4%;
     width: 108%;
     height: 108%;
-    animation: drift 46s ease-in-out infinite alternate;
+    animation:
+      drift 35.5s ease-in-out infinite alternate,
+      push 48.5s ease-in-out infinite alternate;
   }
 
   @keyframes drift {
     from {
-      transform: translate3d(-1.6%, 1.2%, 0) scale(1);
+      translate: -1.6% 1% 0;
     }
     to {
-      transform: translate3d(1.6%, -1.2%, 0) scale(1.05);
+      translate: 1.6% -1% 0;
+    }
+  }
+
+  @keyframes push {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: 1.05;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .coast--dusk,
     .coast--blue-hour :global(.coast-photo) {
-      animation: none;
+      animation: push 72s ease-in-out infinite alternate;
     }
   }
 </style>

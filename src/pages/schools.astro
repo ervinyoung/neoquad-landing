@@ -5,6 +5,8 @@ import Base from '../layouts/Base.astro';
 import Dashboard from '../components/Dashboard.astro';
 import Hero from '../components/Hero.astro';
 import Action from '../components/Action.astro';
+import GlassWindow from '../components/GlassWindow.astro';
+import DashboardOutline from '../components/DashboardOutline.astro';
 import Mark from '../components/Mark.astro';
 import { links, campus } from '../config';
 
@@ -74,7 +76,8 @@ const founders = [
   title="neoQuad for schools. For the students you’re already trying to reach."
   description={`neoQuad puts every official event, club and building in one app, so students find what your college already offers. Founding partner: ${campus.name}.`}
 >
-  <Hero scene="blue-hour" calm line={['For the students you’re already', { i: 'trying' }, 'to reach.']}>
+  <Hero scene="blue-hour" calm device="window" line={['For the students you’re already', { i: 'trying' }, 'to reach.']}>
+    <GlassWindow slot="device"><DashboardOutline /></GlassWindow>
     <Action to="booking" />
   </Hero>
 

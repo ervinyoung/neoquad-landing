@@ -341,10 +341,28 @@ button {
   --glass-shadow: rgba(var(--accent-rgb), 0.55);
 }
 
+/* The nav's button: the same glass, flatter, so the bar is not a second hero. Thinner clear glass,
+   a rim and no drop shadow. Past 960px it matches the height of the switch's pill. */
 .btn--compact {
+  --glass-top: rgba(255, 255, 255, 0.26);
+  --glass-bottom: rgba(255, 255, 255, 0.14);
+  --glass-rim: rgba(255, 255, 255, 0.5);
+
   min-height: 44px;
   padding: 0 18px;
   font-size: 0.9375rem;
+  text-shadow: none;
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+@media (min-width: 960px) {
+  .btn--compact {
+    min-height: 38px;
+    padding: 0 16px;
+    font-size: 0.875rem;
+  }
 }
 
 .btn--compact .btn-long {

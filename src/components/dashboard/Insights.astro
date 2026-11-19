@@ -1,0 +1,439 @@
+---
+// Insights: the week at a glance, from the sample figures.
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import Field from './Field.astro';
+import Segmented from './Segmented.astro';
+import map from '../../assets/dashboard/map.jpg';
+import { range, snapshot, comparison, pins } from './sample';
+---
+
+<header class="head">
+  <h3 class="title">Insights</h3>
+  <div class="bar">
+    <p class="range">
+      Showing campus life from <Field class="date">{range.from}</Field> to <Field class="date">{range.to}</Field>
+    </p>
+    <Segmented options={['7 days', '30 days', 'This month']} active="7 days" />
+    <Field icon="chevron" class="cat">All categories</Field>
+    <Field icon="chevron" class="org">All organizations</Field>
+  </div>
+</header>
+
+<p class="kicker">Snapshot</p>
+
+<div class="grid">
+  {
+    snapshot.map((card) => (
+      <section class="card stat">
+        <h4>
+          <span class="badge">
+            <Icon name={card.icon as 'user'} />
+          </span>
+          {card.title}
+        </h4>
+        <p class="note">{card.text}</p>
+        <p class="value">{card.value}</p>
+        <p class="detail">{card.detail}</p>
+        <p class:list={['change', card.change.good ? 'good' : 'bad']}>{card.change.text}</p>
+      </section>
+    ))
+  }
+
+  <figure class="map">
+    <Image src={map} alt="" sizes="(min-width: 1320px) 490px, (min-width: 700px) 37vw, 73vw" loading="lazy" />
+    <span class="zoom" aria-hidden="true"><span>+</span><span>−</span></span>
+    <figcaption>Where events are</figcaption>
+    {
+      pins.map((pin) => (
+        <span class:list={['pin', pin.kind]} style={`left:${pin.x}%;top:${pin.y}%`}>
+          <svg viewBox="0 0 26 38" aria-hidden="true">
+            <path d="M13 1.5C6.6 1.5 1.5 6.6 1.5 13c0 8.6 11.5 23.5 11.5 23.5S24.5 21.6 24.5 13C24.5 6.6 19.4 1.5 13 1.5z" />
+            <circle cx="13" cy="13" r="4" />
+          </svg>
+          {pin.count && <b>{pin.count}</b>}
+        </span>
+      ))
+    }
+    <span class="legend" aria-hidden="true"><i class="live" />Live<i class="upcoming" />Upcoming<i class="recent" />Recent</span>
+    <span class="credit" aria-hidden="true"><i /><em>Leaflet</em> | Tiles © Esri</span>
+  </figure>
+</div>
+
+<section class="card compare">
+  <h4>
+    <span class="badge"><Icon name="trend" /></span>
+    Compared with the previous 7 days
+  </h4>
+  <p class="note">Same length of time, immediately before this range.</p>
+  <dl>
+    {
+      comparison.map((item) => (
+        <div>
+          <dt>{item.label}</dt>
+          <dd class="num">{item.value}</dd>
+          <dd class:list={['change', item.change.good ? 'good' : 'bad']}>{item.change.text}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>
+
+<section class="card daily">
+  <h4>
+    <span class="badge"><Icon name="trend" /></span>
+    Daily RSVPs and views
+  </h4>
+</section>
+
+<style>
+  .head {
+    position: absolute;
+    inset: 0 0 auto;
+    height: calc(var(--u) * 127);
+    padding: calc(var(--u) * 20) calc(var(--u) * 36) 0 calc(var(--u) * 37);
+    border-bottom: calc(var(--u) * 1.5) solid var(--d-line);
+  }
+
+  .title {
+    font-size: calc(var(--u) * 25.3);
+    font-weight: 600;
+    line-height: calc(var(--u) * 30);
+    letter-spacing: -0.01em;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 9);
+    margin-top: calc(var(--u) * 11);
+  }
+
+  .range {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 8);
+    margin-right: auto;
+    font-size: calc(var(--u) * 17.5);
+    white-space: nowrap;
+  }
+
+  .range :global(.field) {
+    padding: 0 calc(var(--u) * 15.5);
+    font-weight: 600;
+  }
+
+  .bar :global(.cat),
+  .bar :global(.org) {
+    font-size: calc(var(--u) * 16);
+  }
+
+  .bar :global(.cat) {
+    width: calc(var(--u) * 152);
+  }
+
+  .bar :global(.org) {
+    width: calc(var(--u) * 322);
+  }
+
+  .kicker {
+    position: absolute;
+    top: calc(var(--u) * 155);
+    left: calc(var(--u) * 41);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 17);
+  }
+
+  .grid {
+    position: absolute;
+    top: calc(var(--u) * 205);
+    left: calc(var(--u) * 36);
+    display: grid;
+    grid-template-columns: calc(var(--u) * 361) calc(var(--u) * 361) calc(var(--u) * 740);
+    grid-template-rows: calc(var(--u) * 257) calc(var(--u) * 256);
+    gap: calc(var(--u) * 20);
+  }
+
+  .card {
+    border: calc(var(--u) * 1.5) solid var(--d-card-line);
+    border-radius: calc(var(--u) * 22 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-card);
+    padding: calc(var(--u) * 26) calc(var(--u) * 26) 0;
+  }
+
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 12);
+    font-size: calc(var(--u) * 18.6);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+
+  .badge {
+    display: grid;
+    place-items: center;
+    width: calc(var(--u) * 32);
+    height: calc(var(--u) * 32);
+    border-radius: calc(var(--u) * 8 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-badge);
+    font-size: calc(var(--u) * 17);
+  }
+
+  .badge :global(.icon) {
+    stroke-width: 1.8;
+  }
+
+  .note {
+    margin-top: calc(var(--u) * 9);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 14.1);
+    line-height: calc(var(--u) * 21);
+  }
+
+  .stat .note {
+    min-height: calc(var(--u) * 42);
+  }
+
+  .value {
+    margin-top: calc(var(--u) * 12);
+    font-size: calc(var(--u) * 49);
+    font-weight: 600;
+    line-height: calc(var(--u) * 52);
+    letter-spacing: -0.025em;
+  }
+
+  .detail {
+    margin-top: calc(var(--u) * 6);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 15);
+  }
+
+  .change {
+    margin-top: calc(var(--u) * 12);
+    font-size: calc(var(--u) * 15);
+  }
+
+  .good {
+    color: var(--d-good);
+  }
+
+  .bad {
+    color: var(--d-bad);
+  }
+
+  /* The map: a tile with Leaflet's controls drawn on it. */
+  .map {
+    position: relative;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    overflow: hidden;
+    border-radius: calc(var(--u) * 22 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: #2b3a2f;
+  }
+
+  .map :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .zoom {
+    position: absolute;
+    top: calc(var(--u) * 24);
+    left: calc(var(--u) * 13);
+    display: grid;
+    width: calc(var(--u) * 35);
+    border-radius: calc(var(--u) * 4);
+    background: #fff;
+    box-shadow: 0 0 0 calc(var(--u) * 2) rgba(0, 0, 0, 0.2);
+    color: #000;
+    font-size: calc(var(--u) * 24);
+    font-weight: 600;
+    line-height: calc(var(--u) * 34);
+    text-align: center;
+  }
+
+  .zoom span + span {
+    border-top: calc(var(--u) * 1) solid #ccc;
+  }
+
+  figcaption {
+    position: absolute;
+    top: calc(var(--u) * 26);
+    left: calc(var(--u) * 64);
+    color: #fff;
+    font-size: calc(var(--u) * 17);
+    font-weight: 600;
+    text-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 4) rgba(0, 0, 0, 0.45);
+  }
+
+  .pin {
+    position: absolute;
+    width: calc(var(--u) * 26);
+    height: calc(var(--u) * 38);
+    transform: translate(-50%, -100%);
+    filter: drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 2) rgba(0, 0, 0, 0.3));
+  }
+
+  .pin svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .pin path {
+    stroke: #fff;
+    stroke-width: 2;
+  }
+
+  .pin circle {
+    fill: #fff;
+  }
+
+  .pin.live path {
+    fill: var(--d-live);
+  }
+
+  .pin.upcoming path {
+    fill: var(--d-upcoming);
+  }
+
+  .pin.recent path {
+    fill: #9a9a9a;
+  }
+
+  .pin b {
+    position: absolute;
+    top: calc(var(--u) * -7);
+    left: calc(var(--u) * 15);
+    min-width: calc(var(--u) * 20);
+    height: calc(var(--u) * 20);
+    padding: 0 calc(var(--u) * 5);
+    border-radius: 999px;
+    background: #111;
+    color: #fff;
+    font-size: calc(var(--u) * 11.5);
+    font-weight: 700;
+    line-height: calc(var(--u) * 20);
+    text-align: center;
+  }
+
+  .legend {
+    position: absolute;
+    left: calc(var(--u) * 15);
+    bottom: calc(var(--u) * 15);
+    display: flex;
+    align-items: center;
+    height: calc(var(--u) * 39);
+    padding: 0 calc(var(--u) * 14) 0 calc(var(--u) * 12);
+    border-radius: 999px;
+    background: rgba(28, 28, 28, 0.86);
+    color: #fff;
+    font-size: calc(var(--u) * 13.5);
+    font-weight: 600;
+  }
+
+  .legend i {
+    width: calc(var(--u) * 11);
+    height: calc(var(--u) * 11);
+    margin: 0 calc(var(--u) * 6) 0 calc(var(--u) * 10);
+    border: calc(var(--u) * 1.5) solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+  }
+
+  .legend i:first-child {
+    margin-left: 0;
+  }
+
+  .legend .live {
+    background: var(--d-live);
+  }
+
+  .legend .upcoming {
+    background: #5ac8fa;
+  }
+
+  .legend .recent {
+    background: #9a9a9a;
+  }
+
+  .credit {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 4);
+    padding: 0 calc(var(--u) * 6);
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
+    font-size: calc(var(--u) * 12);
+    line-height: calc(var(--u) * 19);
+  }
+
+  .credit i {
+    width: calc(var(--u) * 12);
+    height: calc(var(--u) * 8);
+    background: linear-gradient(#0057b7 50%, #ffd700 50%);
+  }
+
+  .credit em {
+    color: #0078a8;
+    font-style: normal;
+  }
+
+  .compare {
+    position: absolute;
+    top: calc(var(--u) * 758);
+    left: calc(var(--u) * 36);
+    width: calc(var(--u) * 1502);
+    height: calc(var(--u) * 248);
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: calc(var(--u) * 225) repeat(5, calc(var(--u) * 245));
+    margin-top: calc(var(--u) * 32);
+  }
+
+  dl div {
+    padding-left: calc(var(--u) * 20);
+    border-left: calc(var(--u) * 1.5) solid var(--d-hair);
+  }
+
+  dl div:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  dt {
+    color: var(--d-faint);
+    font-size: calc(var(--u) * 13.5);
+  }
+
+  .num {
+    margin-top: calc(var(--u) * 15);
+    font-size: calc(var(--u) * 31);
+    font-weight: 600;
+    line-height: calc(var(--u) * 34);
+    letter-spacing: -0.02em;
+  }
+
+  dd.change {
+    margin-top: calc(var(--u) * 16);
+    white-space: nowrap;
+  }
+
+  .daily {
+    position: absolute;
+    top: calc(var(--u) * 1027);
+    left: calc(var(--u) * 36);
+    width: calc(var(--u) * 1502);
+    height: calc(var(--u) * 200);
+  }
+</style>

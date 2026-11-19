@@ -1,0 +1,57 @@
+---
+// The glass both hero devices are made of: one pane, frosted, lighter toward the top, with a thin
+// rim of light brightest along the top and fading down the sides. It fills its parent; the shape
+// around it sets three values, so a phone and a window are the same material at different sizes:
+//   --pane-radius  the corner (the smoothing is added here)
+//   --pane-frost   how far the blur reaches
+//   --pane-rim     the rim's width
+// and two strengths, for a darker photograph behind it:
+//   --pane-light   the light at the top of the pane (0.16)
+//   --pane-edge    how bright the rim stays down the sides (0.22, at half height)
+---
+
+<div class="pane"></div>
+
+<style>
+  .pane,
+  .pane::before {
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--pane-radius) * var(--corner-reach));
+    corner-shape: var(--corner);
+  }
+
+  .pane {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, var(--pane-light, 0.16)),
+      rgba(255, 255, 255, calc(var(--pane-light, 0.16) * 0.45)) 24%,
+      rgba(255, 255, 255, 0.04) 60%
+    );
+    -webkit-backdrop-filter: blur(var(--pane-frost)) saturate(1.1);
+    backdrop-filter: blur(var(--pane-frost)) saturate(1.1);
+    /* Just enough shade outside the rim to lift the pane off a bright sky. */
+    box-shadow: 0 calc(var(--pane-frost) * 0.4) calc(var(--pane-frost) * 2.5) rgba(30, 24, 44, 0.12);
+  }
+
+  /* The rim is a masked ring of its own, light only, because an element that frosts cannot also be
+     masked with smoothed corners in Chromium. */
+  .pane::before {
+    content: '';
+    border: var(--pane-rim) solid transparent;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.95),
+        rgba(255, 255, 255, calc(0.38 + var(--pane-edge, 0.22))) 18%,
+        rgba(255, 255, 255, var(--pane-edge, 0.22)) 50%,
+        rgba(255, 255, 255, calc(var(--pane-edge, 0.22) * 0.27)) 80%
+      )
+      border-box;
+    -webkit-mask:
+      linear-gradient(#000 0 0) padding-box exclude,
+      linear-gradient(#000 0 0) border-box;
+    mask:
+      linear-gradient(#000 0 0) padding-box exclude,
+      linear-gradient(#000 0 0) border-box;
+  }
+</style>

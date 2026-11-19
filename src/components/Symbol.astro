@@ -1,0 +1,31 @@
+---
+// One of the app's SF Symbols, drawn the way SwiftUI draws Image(systemName:): sized by the font
+// size around it (1em is the 24 pt it was exported at) and coloured by the text colour.
+// The shapes live in src/icons/symbols.ts, written by tools/sf-symbols.swift.
+//
+//   <Symbol name="fork.knife" />
+import { symbols, type SymbolName } from '../icons/symbols';
+
+interface Props {
+  name: SymbolName;
+  class?: string;
+}
+const { name, class: className } = Astro.props;
+const { width, height, d } = symbols[name];
+---
+
+<svg
+  class:list={['symbol', className]}
+  viewBox={`0 0 ${width} ${height}`}
+  style={`width:${width / 24}em;height:${height / 24}em`}
+  aria-hidden="true"
+>
+  <path d={d}></path>
+</svg>
+
+<style>
+  .symbol {
+    flex: none;
+    fill: currentColor;
+  }
+</style>

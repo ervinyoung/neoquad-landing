@@ -1,0 +1,240 @@
+---
+// New event: the short form, part filled in.
+import Field from './Field.astro';
+import Segmented from './Segmented.astro';
+import { campus } from '../../config';
+import { draft } from './sample';
+---
+
+<header class="head">
+  <div>
+    <h3 class="title">New event</h3>
+    <p class="sub">Campus event — publishes to students immediately.</p>
+  </div>
+  <Segmented options={['Campus event', `Public on ${campus.short} grounds`]} active="Campus event" />
+</header>
+
+<div class="form">
+  <div class="progress"><span></span></div>
+  <p class="step">Add one line about it</p>
+
+  <section class="card">
+    <p class="label">Title</p>
+    <Field class="big title-field">{draft.title}</Field>
+    <p class="label">Organization</p>
+    <Field icon="chevron" class="big org">{draft.organization}</Field>
+  </section>
+
+  <section class="card">
+    <h4>When</h4>
+    <div class="pair">
+      <div>
+        <p class="label">Date</p>
+        <Field icon="date" class="big plain">{draft.date}</Field>
+      </div>
+      <div>
+        <p class="label">Starts</p>
+        <Field icon="clock" class="big plain">{draft.starts}</Field>
+      </div>
+    </div>
+    <p class="summary">{draft.summary}</p>
+    <p class="chips">{draft.lengths.map((l) => <span class:list={[l === draft.length && 'on']}>{l}</span>)}</p>
+    <p class="label repeats">Repeats</p>
+    <p class="chips">{draft.repeats.map((r) => <span class:list={[r === draft.repeat && 'on']}>{r}</span>)}</p>
+  </section>
+
+  <section class="card">
+    <h4>Where</h4>
+    <p class="hint">Pick a building, then fine-tune by tapping the map or dragging the pin.</p>
+    <div class="pair">
+      <p class="label">Building</p>
+      <p class="label">Room (optional)</p>
+    </div>
+  </section>
+</div>
+
+<style>
+  .head {
+    position: absolute;
+    top: 0;
+    left: calc(var(--u) * 224);
+    right: calc(var(--u) * 224);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(var(--u) * 103);
+    padding-bottom: calc(var(--u) * 3);
+  }
+
+  .head::after {
+    content: '';
+    position: absolute;
+    left: calc(var(--u) * -224);
+    right: calc(var(--u) * -224);
+    bottom: 0;
+    border-bottom: calc(var(--u) * 1.5) solid var(--d-line);
+  }
+
+  .title {
+    font-size: calc(var(--u) * 25.3);
+    font-weight: 600;
+    line-height: calc(var(--u) * 30);
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    margin-top: calc(var(--u) * 11);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 15.5);
+  }
+
+  .form {
+    position: absolute;
+    top: calc(var(--u) * 137);
+    left: calc(var(--u) * 270);
+    width: calc(var(--u) * 897);
+  }
+
+  .progress {
+    height: calc(var(--u) * 5);
+    border-radius: 999px;
+    background: var(--d-track);
+  }
+
+  .progress span {
+    display: block;
+    width: 83.4%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--d-progress);
+  }
+
+  .step {
+    margin-top: calc(var(--u) * 7);
+    color: var(--d-good);
+    font-size: calc(var(--u) * 14);
+    font-weight: 500;
+  }
+
+  .card {
+    margin-top: calc(var(--u) * 22);
+    padding: calc(var(--u) * 30) calc(var(--u) * 37) calc(var(--u) * 37);
+    border: calc(var(--u) * 1.5) solid var(--d-card-line);
+    border-radius: calc(var(--u) * 24 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-card);
+  }
+
+  .card:nth-of-type(2) {
+    padding-bottom: calc(var(--u) * 49);
+  }
+
+  .card:last-of-type {
+    padding-top: calc(var(--u) * 33);
+  }
+
+  .card:first-of-type {
+    margin-top: calc(var(--u) * 41);
+    padding-top: calc(var(--u) * 33);
+  }
+
+  .label {
+    margin-bottom: calc(var(--u) * 10);
+    color: var(--d-label);
+    font-size: calc(var(--u) * 13.5);
+  }
+
+  .card :global(.big) {
+    height: calc(var(--u) * 54);
+    padding: 0 calc(var(--u) * 6) 0 calc(var(--u) * 17);
+    border-radius: calc(var(--u) * 12 * var(--corner-reach));
+    font-size: calc(var(--u) * 19);
+    font-weight: 600;
+  }
+
+  .card :global(.title-field) {
+    margin-bottom: calc(var(--u) * 24);
+  }
+
+  .card :global(.org) {
+    font-weight: 500;
+    padding-left: calc(var(--u) * 21);
+  }
+
+  .card :global(.plain) {
+    height: calc(var(--u) * 57);
+    font-weight: 400;
+    font-size: calc(var(--u) * 18);
+  }
+
+  .card :global(.plain) {
+    padding-right: calc(var(--u) * 18);
+  }
+
+  .card :global(.plain .icon) {
+    font-size: calc(var(--u) * 20);
+    stroke-width: 1.5;
+  }
+
+  h4 {
+    font-size: calc(var(--u) * 24);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: calc(var(--u) * 17);
+    margin-top: calc(var(--u) * 26);
+  }
+
+  .summary {
+    margin-top: calc(var(--u) * 24);
+    color: var(--d-blue);
+    font-size: calc(var(--u) * 15);
+    font-weight: 500;
+  }
+
+  .chips {
+    display: flex;
+    gap: calc(var(--u) * 10);
+    margin-top: calc(var(--u) * 30);
+  }
+
+  .chips span {
+    display: grid;
+    place-items: center;
+    height: calc(var(--u) * 36);
+    padding: 0 calc(var(--u) * 15.2);
+    border: calc(var(--u) * 1.5) solid var(--d-chip-line);
+    border-radius: 999px;
+    font-size: calc(var(--u) * 15);
+    font-weight: 500;
+  }
+
+  .chips .on {
+    border-color: var(--d-ink);
+    background: var(--d-ink);
+    color: #fff;
+  }
+
+  .repeats {
+    margin-top: calc(var(--u) * 49);
+    margin-bottom: calc(var(--u) * 15);
+  }
+
+  .repeats + .chips {
+    margin-top: 0;
+  }
+
+  .hint {
+    margin-top: calc(var(--u) * 7);
+    color: var(--d-muted);
+    font-size: calc(var(--u) * 15);
+  }
+
+  .card:last-of-type .pair {
+    margin-top: calc(var(--u) * 28);
+  }
+</style>

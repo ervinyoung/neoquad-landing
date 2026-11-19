@@ -1,0 +1,33 @@
+---
+// A window made of the hero glass (GlassPane): a display's proportion, nothing else, the
+// photograph softened through it. Whatever it shows is the slot. Sizes are in cqw (percent of the
+// window's width), so it can be any size and keep its proportions; the slot can use cqw too.
+import GlassPane from './GlassPane.astro';
+---
+
+<div class="glass-window" aria-hidden="true">
+  <GlassPane />
+  <div class="glass-window-screen"><slot /></div>
+</div>
+
+<style>
+  .glass-window {
+    /* The staff dashboard's own corner, and the phone's frost and rim at a display's scale. */
+    --pane-radius: 2.2cqw;
+    --pane-frost: max(6px, 1.1cqw);
+    --pane-rim: 1.5px;
+    /* It stands on the darker blue-hour photograph, so its top light and rim are a step stronger. */
+    --pane-light: 0.22;
+    --pane-edge: 0.4;
+
+    position: relative;
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+  }
+
+  .glass-window-screen {
+    position: absolute;
+    inset: 0;
+  }
+</style>

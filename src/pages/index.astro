@@ -7,6 +7,7 @@ import Hero from '../components/Hero.astro';
 import Action from '../components/Action.astro';
 import GlassPhone from '../components/GlassPhone.astro';
 import AppWireframe from '../components/AppWireframe.astro';
+import HowItWorks from '../components/HowItWorks.astro';
 import { links, campus } from '../config';
 
 import glassSeed from '../assets/logo/glass-seed.png';
@@ -77,6 +78,8 @@ const qr = await QRCode.toString(links.appStore, {
       </ul>
     </div>
   </section>
+
+  <HowItWorks />
 
   <section class="section section--black closing on-dark">
     <div class="wrap">

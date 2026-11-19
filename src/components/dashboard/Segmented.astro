@@ -1,0 +1,43 @@
+---
+// The staff site's segmented control, drawn still: one option chosen.
+interface Props {
+  options: string[];
+  active: string;
+  class?: string;
+}
+const { options, active, class: className } = Astro.props;
+---
+
+<span class:list={['seg', className]}>
+  {options.map((option) => <span class:list={[option === active && 'on']}>{option}</span>)}
+</span>
+
+<style>
+  .seg {
+    display: inline-flex;
+    height: calc(var(--u) * 47);
+    padding: calc(var(--u) * 4.5);
+    border: calc(var(--u) * 1.5) solid var(--d-field-line);
+    border-radius: calc(var(--u) * 12 * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--d-well);
+    color: var(--d-seg);
+    font-size: calc(var(--u) * 15);
+    white-space: nowrap;
+  }
+
+  .seg span {
+    display: grid;
+    place-items: center;
+    padding: 0 calc(var(--u) * 15.5);
+    border-radius: calc(var(--u) * 8 * var(--corner-reach));
+    corner-shape: var(--corner);
+  }
+
+  .seg .on {
+    background: var(--d-card);
+    color: var(--d-ink);
+    font-weight: 600;
+    box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 2) rgba(0, 0, 0, 0.06);
+  }
+</style>

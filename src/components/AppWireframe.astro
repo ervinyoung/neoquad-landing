@@ -1,557 +1,215 @@
 ---
-// The neoQuad app, drawn in glass for a GlassPhone screen: the campus map with its pins,
-// and the Events sheet with what is happening now. It plays once as the page arrives
-// (pins drop, the sheet rises, the events come in), then stays alive: the live pin ripples.
-// Everything is sized in cqw, so it scales with the phone. It is decoration; the phone is aria-hidden.
-//
-// Corners follow the phone inward: the sheet floats a gap inside the screen, the group sits a
-// pad inside the sheet, and each radius is the one outside it minus that space.
+// What stands on the GlassPhone's screen: the app's icon and name under the island, and the campus
+// as the app maps it, engraved in the glass, with event pins on their places. All of it is the app's:
+//   icon    the iOS app icon (01 Brand/neoQuad Brand Resources/iOS app icon)
+//   name    with chevron.right, the app's row disclosure
+//   map     SBCC from the same OpenStreetMap footprints the app's places come from, north up as the
+//           app's campus camera is; drawn by tools/campus-map.py into src/data/campus-map.json
+//   pins    PinCore (Views/EventPinView.swift): a 40 pt white disc holding a 34 pt photo, a 3 pt
+//           white ring and a soft shadow; a live event adds a red ring that pulses outward. Each
+//           stands on its place (SBCCBuildings.swift) and shows that place's photo (BuildingPhoto_*).
+// Sizes are in cqw of the phone, on a 402 pt wide screen (1 pt = 0.2488cqw). It is decoration;
+// the phone is aria-hidden.
+import { Image } from 'astro:assets';
+import Symbol from './Symbol.astro';
+import map from '../data/campus-map.json';
+import icon from '../assets/app/icon.png';
+import overlook from '../assets/app/pins/overlook.jpg';
+import garden from '../assets/app/pins/garden.jpg';
+import pride from '../assets/app/pins/pride.jpg';
 
-// Drawn at 24 x 24 with a 2 unit round stroke.
-const glyphs = {
-  people:
-    'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.5 19c.3-3 2.3-5 5.5-5s5.2 2 5.5 5M16 5.3a3 3 0 0 1 0 5.5M17.5 14.3c1.8.7 2.8 2.3 3 4.7',
-  book: 'M4 5.5c2.8-.8 5.5-.5 8 1 2.5-1.5 5.2-1.8 8-1V18c-2.8-.8-5.5-.5-8 1-2.5-1.5-5.2-1.8-8-1V5.5ZM12 6.5V19',
-  music:
-    'M9 17.5V6l10-2v11.5M9 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM19 15.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z',
-  cap: 'M2.5 9.5 12 5l9.5 4.5L12 14 2.5 9.5ZM6.5 11.8V16c1.5 1.5 3.3 2.2 5.5 2.2s4-.7 5.5-2.2v-4.2',
-  spark: 'M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9L12 3.5Z',
-  food: 'M7 3v7.5M4.5 3v4.5a2.5 2.5 0 0 0 5 0V3M7 10.5V21M16.5 21V3c2.2 1.2 3.3 3.6 3.3 7 0 1.9-1.1 3.2-3.3 3.7',
-  calendar:
-    'M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v10a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-10ZM4 10h16M8 3v4M16 3v4',
-  building:
-    'M6 20.5V5a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 18 5v15.5M3.5 20.5h17M10 8h1M13 8h1M10 12h1M13 12h1M10.5 20.5V17h3v3.5',
-  person: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20.5c.6-3.6 3.3-5.5 7.5-5.5s6.9 1.9 7.5 5.5',
-} as const;
-type Glyph = keyof typeof glyphs;
-
-// x and y are percentages of the screen. The live pin is the one on the sheet's first row.
-const pins: { x: number; y: number; glyph: Glyph; live?: boolean; count?: number }[] = [
-  { x: 24, y: 17.5, glyph: 'cap', count: 3 },
-  { x: 64, y: 12.5, glyph: 'spark' },
-  { x: 45, y: 25.5, glyph: 'people', live: true },
-  { x: 79, y: 23, glyph: 'music' },
-  { x: 17, y: 31, glyph: 'book' },
-];
-
-// The phone says 9:41 in the morning; the events agree with it.
-const events: { name: string; place: string; glyph: Glyph; food?: boolean }[] = [
-  { name: 'Club Rush', place: 'Friendship Plaza · Until 11:30', glyph: 'people', food: true },
-  { name: 'Midterm Study Jam', place: 'Luria Library · Until 12:05', glyph: 'book', food: true },
-  { name: 'Open Studio Night', place: 'Drama/Music · Until 10:20', glyph: 'music' },
-];
-
-const tabs: { name: string; glyph: Glyph }[] = [
-  { name: 'Events', glyph: 'calendar' },
-  { name: 'Places', glyph: 'building' },
-  { name: 'Orgs', glyph: 'people' },
-  { name: 'Me', glyph: 'person' },
+const pins = [
+  { photo: garden, at: map.pins.Garden },
+  { photo: overlook, at: map.pins.Overlook },
+  { photo: pride, at: map.pins.Pride, live: true },
 ];
 ---
 
 <div class="app">
-  <!-- The campus, as a map remembers it: a few paths, the field, the shoreline. -->
-  <svg class="streets" viewBox="0 0 100 86" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M-4 30C14 26 22 14 38 15s20 12 34 10 20-12 34-12" />
-    <path d="M30-4c2 12-6 20-4 32s14 18 12 30-12 16-10 30" />
-    <path d="M62-4c-2 14 8 20 6 32s-12 14-8 28 16 14 18 32" />
-    <path d="M-4 58c16-4 26 4 42 2s22-12 36-10 18 8 30 6" />
-    <ellipse cx="80" cy="45" rx="9" ry="5.5" transform="rotate(-14 80 45)" />
+  <svg class="map" viewBox={`0 0 ${map.width} ${map.height}`} aria-hidden="true">
+    <path class="map-shore" d={map.shore} />
+    <path class="map-streets" d={map.streets} />
+    <path class="map-walks" d={map.walks} />
+    <path class="map-buildings" d={map.buildings} />
   </svg>
 
-  <div class="status">
-    <span>9:41</span>
-    <svg viewBox="0 0 46 12" aria-hidden="true">
-      <path d="M7.7 2.3a8.6 8.6 0 0 1 6 2.4l.6-.6a.3.3 0 0 0 0-.4 9.6 9.6 0 0 0-13.2 0 .3.3 0 0 0 0 .4l.6.6a8.6 8.6 0 0 1 6-2.4Zm0 3a5.6 5.6 0 0 1 3.8 1.5l.7-.7a.3.3 0 0 0 0-.4 6.6 6.6 0 0 0-9 0 .3.3 0 0 0 0 .4l.7.7a5.6 5.6 0 0 1 3.8-1.5Zm2 2.7-1.8 1.8a.3.3 0 0 1-.4 0L5.7 8a.3.3 0 0 1 0-.4 3 3 0 0 1 4 0 .3.3 0 0 1 0 .4Z" />
-      <rect x="21.5" y=".5" width="21" height="11" rx="3.3" fill="none" stroke="currentColor" opacity=".4" />
-      <rect x="23" y="2" width="18" height="8" rx="2" />
-      <path d="M44 4.2v3.6c.8-.3 1.3-1 1.3-1.8s-.5-1.5-1.3-1.8Z" opacity=".45" />
-    </svg>
+  <div class="app-id">
+    <Image class="app-icon" src={icon} alt="" width={144} height={144} format="webp" />
+    <span class="app-name">neoQuad<Symbol name="chevron.right" /></span>
   </div>
 
-  <ul class="pins">
-    {
-      pins.map((pin, i) => (
-        <li class:list={['pin', pin.live && 'pin--live']} style={`left:${pin.x}%;top:${pin.y}%;--n:${i}`}>
-          <span class="pin-body">
-            <svg viewBox="0 0 24 24"><path d={glyphs[pin.glyph]} /></svg>
-            {pin.count && <b>{pin.count}</b>}
-          </span>
-          {pin.live && <em>Live</em>}
-        </li>
-      ))
-    }
-  </ul>
-
-  <div class="sheet">
-    <div class="grabber"></div>
-    <div class="sheet-head">
-      <span class="sheet-title">Events</span>
-      <span class="plus"></span>
-    </div>
-    <div class="group">
-      <p class="now"><i></i>Happening Now<span>3 events</span></p>
-      <ul>
-        {
-          events.map((event, i) => (
-            <li class="event" style={`--n:${i}`}>
-              <span class="avatar"><svg viewBox="0 0 24 24"><path d={glyphs[event.glyph]} /></svg></span>
-              <span class="event-text">
-                <b>{event.name}</b>
-                <small>{event.place}</small>
-              </span>
-              {event.food && <svg class="food" viewBox="0 0 24 24"><path d={glyphs.food} /></svg>}
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-    <ul class="tabs">
-      {
-        tabs.map((tab, i) => (
-          <li class:list={[i === 0 && 'is-on']}>
-            <svg viewBox="0 0 24 24"><path d={glyphs[tab.glyph]} /></svg>
-            {tab.name}
-          </li>
-        ))
-      }
-    </ul>
-  </div>
+  {
+    pins.map((pin, i) => (
+      <span class:list={['pin', pin.live && 'pin--live']} style={`left:${pin.at.x}%;top:${pin.at.y}%;--n:${i}`}>
+        <Image src={pin.photo} alt="" width={96} height={96} format="webp" />
+      </span>
+    ))
+  }
 </div>
 
 <style>
   .app {
-    /* The space between the screen and the sheet, and between the sheet and what it holds. */
-    --gap: 1.8cqw;
-    --pad: 2.8cqw;
-    --sheet-radius: calc(var(--screen-radius, 12cqw) - var(--gap));
-    --group-radius: calc(var(--sheet-radius) - var(--pad));
-
+    --pt: 0.2488cqw;
     position: absolute;
     inset: 0;
     color: var(--white);
-    font-family: var(--sans);
-    line-height: 1.2;
+    font-family: -apple-system, BlinkMacSystemFont, var(--sans);
   }
 
-  ul,
-  p {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  svg {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  /* The map: the photograph itself, seen through the glass, with the campus traced on it. */
-  .streets {
+  /* The map: hairlines engraved in the glass, buildings brightest, walkways quietest. It fades out
+     toward the pane's edges and under the icon, so nothing meets it hard. */
+  .map {
     position: absolute;
-    inset: 0 0 auto;
+    inset: 0;
     width: 100%;
-    height: 44%;
-    stroke: rgba(255, 255, 255, 0.2);
-    stroke-width: 1.5;
-    vector-effect: non-scaling-stroke;
-    -webkit-mask-image: linear-gradient(#000 60%, transparent);
-    mask-image: linear-gradient(#000 60%, transparent);
+    height: 100%;
+    fill: none;
+    stroke: var(--white);
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    -webkit-mask:
+      linear-gradient(180deg, transparent 12%, #000 26%, #000 64%, transparent 80%),
+      linear-gradient(90deg, transparent 2%, #000 14%, #000 86%, transparent 98%);
+    -webkit-mask-composite: source-in;
+    mask:
+      linear-gradient(180deg, transparent 12%, #000 26%, #000 64%, transparent 80%) intersect,
+      linear-gradient(90deg, transparent 2%, #000 14%, #000 86%, transparent 98%);
   }
 
-  .streets * {
+  .map path {
     vector-effect: non-scaling-stroke;
   }
 
-  /* Status bar: 9:41, Wi-Fi, a full battery. */
-  .status {
-    position: relative;
+  .map-buildings {
+    fill: rgba(255, 255, 255, 0.07);
+    stroke-opacity: 0.6;
+    stroke-width: 0.75;
+  }
+
+  .map-walks {
+    stroke-opacity: 0.22;
+    stroke-width: 0.6;
+  }
+
+  .map-streets {
+    stroke-opacity: 0.34;
+    stroke-width: 1.25;
+  }
+
+  .map-shore {
+    stroke-opacity: 0.5;
+    stroke-width: 1;
+  }
+
+  /* Icon and name, centred under the island. */
+  .app-id {
+    position: absolute;
+    top: 15.5cqw;
+    left: 0;
+    right: 0;
+    display: grid;
+    justify-items: center;
+    gap: 2.4cqw;
+  }
+
+  .app-icon {
+    width: 12cqw;
+    height: 12cqw;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0.6cqw 2cqw rgba(20, 16, 30, 0.16);
+  }
+
+  .app-name {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 14.6cqw;
-    padding: 0 7.4cqw 0 9.6cqw;
-    font-size: 5.2cqw;
+    gap: 0.9cqw;
+    font-size: 3.7cqw;
     font-weight: 600;
     letter-spacing: -0.01em;
+    text-shadow: 0 0.2cqw 1cqw rgba(20, 16, 30, 0.24);
   }
 
-  .status svg {
-    width: 15cqw;
-    fill: currentColor;
-    stroke: none;
-  }
-
-  /* Pins mark what is on: a glass bead with the kind of event in it, standing on a short stem. */
-  .pin {
-    position: absolute;
-    width: 11cqw;
-    height: 11cqw;
-    margin: -11cqw 0 0 -5.5cqw;
-  }
-
-  .pin-body {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.24);
-    box-shadow:
-      inset 0 0 0 0.6cqw rgba(255, 255, 255, 0.92),
-      inset 0 1.4cqw 2cqw -1cqw rgba(255, 255, 255, 0.7),
-      0 1.6cqw 3.4cqw rgba(12, 20, 48, 0.3);
-    transform-origin: 50% 118%;
-  }
-
-  .pin-body::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: calc(100% - 0.2cqw);
-    width: 2.6cqw;
-    height: 1.9cqw;
-    margin-left: -1.3cqw;
-    background: rgba(255, 255, 255, 0.92);
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
-  }
-
-  .pin-body svg {
-    width: 5.6cqw;
-    filter: drop-shadow(0 0.3cqw 0.6cqw rgba(12, 20, 48, 0.3));
-  }
-
-  /* How many events share the place. */
-  .pin-body b {
-    position: absolute;
-    top: -1.6cqw;
-    right: -1.8cqw;
-    display: grid;
-    place-items: center;
-    min-width: 5cqw;
-    height: 5cqw;
-    border-radius: 999px;
-    background: var(--white);
-    color: var(--graphite);
-    font-size: 3.2cqw;
-    font-weight: 700;
-    box-shadow: 0 0.4cqw 1.2cqw rgba(12, 20, 48, 0.24);
-  }
-
-  /* The live pin is solid, and carries its tag, as it does in the app. */
-  .pin--live .pin-body {
-    background: var(--white);
-    color: var(--graphite);
-  }
-
-  .pin--live .pin-body svg {
-    filter: none;
-  }
-
-  .pin em {
-    position: absolute;
-    left: 50%;
-    bottom: calc(100% + 1.2cqw);
-    padding: 0.9cqw 2.2cqw 1cqw;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.92);
-    color: var(--graphite);
-    font-size: 3cqw;
-    font-style: normal;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    transform: translateX(-50%);
-  }
-
-  :global(html[data-enter]) .pin em {
-    animation: tag-in 500ms var(--ease-out) backwards;
-    animation-delay: calc(var(--t0, 1500ms) + var(--n) * 110ms + 380ms);
-  }
-
-  @keyframes tag-in {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(1.6cqw) scale(0.94);
-    }
-  }
-
-  /* The live pin sends out a ripple, at the pace of the brand's Wave. */
-  .pin--live::before,
-  .pin--live::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 0.5cqw rgba(255, 255, 255, 0.8);
-    opacity: 0;
-    animation: ripple 2800ms var(--ease-out) 2600ms infinite;
-  }
-
-  .pin--live::after {
-    animation-delay: 3300ms;
-  }
-
-  @keyframes ripple {
-    0% {
-      opacity: 0.9;
-      transform: scale(1);
-    }
-    70%,
-    100% {
-      opacity: 0;
-      transform: scale(2.6);
-    }
-  }
-
-  /* The Events sheet: regular glass, floating just inside the screen, so its words stay readable. */
-  .sheet {
-    position: absolute;
-    inset: 40.5% var(--gap) var(--gap);
-    padding: 2.2cqw var(--pad) 0;
-    border-radius: calc(var(--sheet-radius) * var(--corner-reach));
-    corner-shape: var(--corner);
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.1));
-    -webkit-backdrop-filter: blur(14px) saturate(1.6);
-    backdrop-filter: blur(14px) saturate(1.6);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-      0 -2cqw 8cqw rgba(12, 20, 48, 0.16);
-  }
-
-  .grabber {
-    width: 11cqw;
-    height: 1.4cqw;
-    margin: 0 auto;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.55);
-  }
-
-  .sheet-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 2.6cqw;
-    padding: 0 1.2cqw 0 3.4cqw;
-  }
-
-  .sheet-title {
-    font-size: 8.2cqw;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .plus {
-    position: relative;
-    width: 10.4cqw;
-    height: 10.4cqw;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.18);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-  }
-
-  .plus::before,
-  .plus::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 4cqw;
-    height: 0.56cqw;
-    margin: -0.28cqw 0 0 -2cqw;
-    border-radius: 999px;
-    background: var(--white);
-  }
-
-  .plus::after {
-    transform: rotate(90deg);
-  }
-
-  .group {
-    margin-top: 3.2cqw;
-    padding: 3.6cqw 3.4cqw 1cqw;
-    border-radius: calc(var(--group-radius) * var(--corner-reach));
-    corner-shape: var(--corner);
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  }
-
-  .now {
-    display: flex;
-    align-items: center;
-    gap: 2cqw;
-    font-size: 5.2cqw;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-
-  .now i {
-    width: 2.2cqw;
-    height: 2.2cqw;
-    border-radius: 50%;
-    background: var(--white);
-    animation: breathe 2800ms cubic-bezier(0.37, 0, 0.63, 1) infinite;
-  }
-
-  @keyframes breathe {
-    50% {
-      opacity: 0.35;
-    }
-  }
-
-  .now span {
-    margin-left: auto;
-    font-size: 4.1cqw;
-    font-weight: 400;
+  .app-name :global(.symbol) {
+    font-size: 2.6cqw;
     opacity: 0.72;
   }
 
-  .event {
-    display: flex;
-    align-items: center;
-    gap: 3cqw;
-    padding: 3cqw 0;
-  }
-
-  .avatar {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 10cqw;
-    height: 10cqw;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-      inset 0 1.2cqw 1.8cqw -1cqw rgba(255, 255, 255, 0.6);
-  }
-
-  .avatar svg {
-    width: 5.2cqw;
-  }
-
-  .event-text {
-    display: grid;
-    gap: 0.8cqw;
-    min-width: 0;
-  }
-
-  .event b,
-  .event small {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .event b {
-    font-size: 4.9cqw;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-  }
-
-  .event small {
-    font-size: 4cqw;
-    opacity: 0.76;
-  }
-
-  .food {
-    flex: none;
-    width: 4.6cqw;
-    margin-left: auto;
-    opacity: 0.86;
-  }
-
-  /* Tab bar: a glass capsule floating over the list, a pad inside the sheet. */
-  .tabs {
+  /* A pin, as PinCore draws it. */
+  .pin {
     position: absolute;
-    left: var(--pad);
-    right: var(--pad);
-    bottom: var(--pad);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    padding: 1.4cqw;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-    font-size: 3.1cqw;
-    font-weight: 500;
+    width: calc(40 * var(--pt));
+    height: calc(40 * var(--pt));
+    margin: calc(-20 * var(--pt));
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 calc(2 * var(--pt)) calc(12 * var(--pt)) rgba(0, 0, 0, 0.22);
   }
 
-  .tabs li {
-    display: grid;
-    justify-items: center;
-    gap: 0.7cqw;
-    padding: 1.7cqw 0 1.5cqw;
-    border-radius: 999px;
-    opacity: 0.86;
+  .pin img {
+    position: absolute;
+    inset: calc(3 * var(--pt));
+    width: calc(34 * var(--pt));
+    height: calc(34 * var(--pt));
+    border-radius: 50%;
+    object-fit: cover;
   }
 
-  .tabs svg {
-    width: 6cqw;
+  /* Live: a red ring 3 pt outside the disc grows by 22 pt and fades, every 2.2 s, as in the app. */
+  .pin--live::after {
+    content: '';
+    position: absolute;
+    inset: calc(-3 * var(--pt));
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 calc(2.5 * var(--pt)) rgba(255, 59, 48, 0.45);
+    animation: live 2200ms cubic-bezier(0, 0, 0.58, 1) infinite;
   }
 
-  .tabs .is-on {
-    background: rgba(255, 255, 255, 0.22);
-    opacity: 1;
-  }
-
-  /* ---------- Arriving: pins drop, the sheet rises, the events come in ---------- */
-
-  @keyframes pin-drop {
-    from {
+  @keyframes live {
+    to {
       opacity: 0;
-      transform: translateY(-4cqw) scale(0.86);
+      transform: scale(1.48);
     }
   }
 
-  @keyframes sheet-rise {
+  /* Arriving, once the phone has risen: the map fades up, then the pins settle onto it in turn. */
+  @keyframes map-in {
     from {
       opacity: 0;
-      transform: translateY(16%);
     }
   }
 
-  @keyframes event-in {
+  @keyframes pin-in {
     from {
       opacity: 0;
-      transform: translateY(3cqw);
-      filter: blur(1.4cqw);
+      transform: translateY(calc(-8 * var(--pt))) scale(0.9);
     }
   }
 
-  :global(html[data-enter]) .pin-body {
-    animation: pin-drop 560ms var(--ease-out) backwards;
-    animation-delay: calc(var(--t0, 1500ms) + var(--n) * 70ms);
+  :global(html[data-enter]) .map {
+    animation: map-in 900ms var(--ease-out) backwards;
+    animation-delay: var(--t0, 1200ms);
   }
 
-  :global(html[data-enter]) .sheet {
-    animation: sheet-rise 900ms var(--ease-glass) backwards;
-    animation-delay: calc(var(--t0, 1500ms) + 360ms);
+  :global(html[data-enter]) .pin {
+    animation: pin-in 520ms var(--ease-out) backwards;
+    animation-delay: calc(var(--t0, 1200ms) + 420ms + var(--n) * 60ms);
   }
 
-  :global(html[data-enter]) .event {
-    animation: event-in 600ms var(--ease-out) backwards;
-    animation-delay: calc(var(--t0, 1500ms) + 800ms + var(--n) * 70ms);
-  }
-
-  /* Reduced motion: nothing travels. The live pin and the dot still breathe, in place. */
+  /* Reduced motion: the pins fade in where they stand; the ring stays and only breathes. */
   @media (prefers-reduced-motion: reduce) {
-    :global(html[data-enter]) .pin-body,
-    :global(html[data-enter]) .pin em,
-    :global(html[data-enter]) .sheet,
-    :global(html[data-enter]) .event,
-    .pin--live::before,
+    :global(html[data-enter]) .pin {
+      animation-name: map-in;
+    }
+
     .pin--live::after {
-      animation: none;
+      animation: breathe 2200ms ease-in-out infinite alternate;
+    }
+
+    @keyframes breathe {
+      to {
+        opacity: 0.4;
+      }
     }
   }
 </style>

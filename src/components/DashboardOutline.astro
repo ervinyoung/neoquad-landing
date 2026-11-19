@@ -1,0 +1,438 @@
+---
+// The staff dashboard's Insights view, drawn in hairlines for a GlassWindow: the same line language
+// as the campus map on the Students phone. It traces the real screen (src/assets/dashboard/
+// insights.png), measured on a 1840 px wide window and set in cqw of that width:
+//   sidebar  the logo, then the Work rows (Insights selected) and the Admin rows, with their icons
+//   header   "Insights", the date range fields, 7 days / 30 days / This month, the two menus
+//   snapshot the four cards and the map of where events are (the campus outline with its pins)
+//   then     Compared with the previous 7 days (six figures) and the top of the daily chart
+// Titles and figures are written, from the dashboard's own sample (dashboard/sample.ts) and its
+// icons (dashboard/Icon.astro); details are single hairlines,
+// descriptions are left out. Figures are the brightest thing,
+// titles next, structure quietest. It is decoration; the window is aria-hidden.
+import map from '../data/campus-map.json';
+import Icon, { type IconName } from './dashboard/Icon.astro';
+import { snapshot, comparison } from './dashboard/sample';
+
+// The sidebar's rows, by their icons (dashboard/Sidebar.astro); their words are too small to read here.
+const work: IconName[] = ['trend', 'inbox', 'eye', 'calendar', 'plus'];
+const admin: IconName[] = ['user', 'building', 'list'];
+// The map tile shows the campus band of the phone's outline, at the tile's proportion.
+const view = { x: 0, y: 52, w: 100, h: 72 };
+const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => ({
+  x: (p.x / 100) * map.width,
+  y: (p.y / 100) * map.height,
+  live: i === 2,
+}));
+---
+
+<div class="dash">
+  <aside class="side">
+    <span class="logo"></span>
+    <i class="line line--label"></i>
+    <ul>
+      {work.map((icon, i) => <li class:list={[i === 0 && 'is-on']}><Icon name={icon} /><i class="line"></i></li>)}
+    </ul>
+    <i class="line line--label"></i>
+    <ul>
+      {admin.map((icon) => <li><Icon name={icon} /><i class="line"></i></li>)}
+    </ul>
+  </aside>
+
+  <div class="main">
+    <header class="head">
+      <p class="heading">Insights</p>
+      <div class="controls">
+        <i class="line line--long"></i>
+        <span class="field"></span>
+        <span class="field"></span>
+        <span class="segments"><span class="is-on"></span><span></span><span></span></span>
+        <span class="field field--menu"></span>
+        <span class="field field--menu field--wide"></span>
+      </div>
+    </header>
+
+    <div class="body">
+      <i class="line line--label"></i>
+      <div class="snapshot">
+        {
+          snapshot.map((card, i) => (
+            <div class="card" style={`--n:${i}`}>
+              <p class="title"><Icon name={card.icon as IconName} />{card.title}</p>
+              <p class="figure">{card.value}</p>
+              <i class="line line--short"></i>
+            </div>
+          ))
+        }
+        <div class="card card--map" style="--n:4">
+          <svg viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`} preserveAspectRatio="xMidYMid slice">
+            <path class="map-streets" d={map.streets} />
+            <path class="map-walks" d={map.walks} />
+            <path class="map-buildings" d={map.buildings} />
+            {pins.map((p) => <circle class:list={['map-pin', p.live && 'map-pin--live']} cx={p.x} cy={p.y} r="2.4" />)}
+          </svg>
+        </div>
+      </div>
+
+      <div class="card compare" style="--n:5">
+        <p class="title"><Icon name="trend" />Compared with the previous 7 days</p>
+        <div class="columns">
+          {
+            comparison.map((column) => (
+              <span>
+                <i class="line line--short"></i>
+                <p class="figure figure--small">{column.value}</p>
+              </span>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="card chart" style="--n:6">
+        <p class="title"><Icon name="trend" />Daily RSVPs and views</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* As on the campus map: structure in quiet hairlines, fills barely there, words small. Figures
+     are the brightest thing, titles next. */
+  .dash {
+    --line: rgba(255, 255, 255, 0.3);
+    --hair: rgba(255, 255, 255, 0.2);
+    --fill: rgba(255, 255, 255, 0.04);
+    --title: rgba(255, 255, 255, 0.72);
+    --card-radius: 1.1cqw;
+
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 15.3cqw 1fr;
+    color: var(--white);
+    font-family: -apple-system, BlinkMacSystemFont, var(--sans);
+    line-height: 1.2;
+    /* Soft toward the edges, like the map in the phone. */
+    -webkit-mask:
+      linear-gradient(180deg, #000 70%, transparent 96%),
+      linear-gradient(90deg, #000 90%, transparent 99%);
+    -webkit-mask-composite: source-in;
+    mask:
+      linear-gradient(180deg, #000 70%, transparent 96%) intersect,
+      linear-gradient(90deg, #000 90%, transparent 99%);
+  }
+
+  ul,
+  p {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  i {
+    display: block;
+  }
+
+  /* A line of text, drawn as a single hairline. */
+  .line {
+    width: 12cqw;
+    height: 1px;
+    background: var(--hair);
+  }
+
+  .line--short {
+    width: 6cqw;
+  }
+
+  .line--label {
+    width: 2.4cqw;
+  }
+
+  .line--long {
+    width: 10cqw;
+  }
+
+  /* ---------- Sidebar ---------- */
+
+  .side {
+    display: flex;
+    flex-direction: column;
+    padding: 1.4cqw 0.8cqw;
+    border-right: 1px solid var(--line);
+  }
+
+  .logo {
+    width: 1.8cqw;
+    height: 1.8cqw;
+    margin: 0 0 1.9cqw 0.5cqw;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .side .line--label {
+    margin: 0 0 1cqw 0.6cqw;
+  }
+
+  .side ul {
+    display: grid;
+    gap: 0.2cqw;
+    margin-bottom: 1.9cqw;
+  }
+
+  .side li {
+    display: flex;
+    align-items: center;
+    gap: 0.8cqw;
+    height: 1.8cqw;
+    padding: 0 0.6cqw;
+    border-radius: calc(0.5cqw * var(--corner-reach));
+    corner-shape: var(--corner);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85cqw;
+  }
+
+  .side li .line {
+    width: 5cqw;
+  }
+
+  .side li:nth-child(2n) .line {
+    width: 3.8cqw;
+  }
+
+  .side .is-on {
+    background: var(--fill);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    color: var(--title);
+  }
+
+  .side .is-on .line {
+    background: rgba(255, 255, 255, 0.45);
+  }
+
+  /* ---------- Header ---------- */
+
+  .main {
+    min-width: 0;
+  }
+
+  .head {
+    display: grid;
+    gap: 1.1cqw;
+    height: 6.85cqw;
+    padding: 1.6cqw 2cqw 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .heading {
+    font-size: 1.4cqw;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.7cqw;
+  }
+
+  .field,
+  .segments {
+    height: 2.3cqw;
+    border-radius: calc(0.5cqw * var(--corner-reach));
+    corner-shape: var(--corner);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .field {
+    width: 6.7cqw;
+  }
+
+  .segments {
+    display: flex;
+    gap: 0.2cqw;
+    width: 14.8cqw;
+    margin-left: auto;
+    padding: 0.25cqw;
+    background: var(--fill);
+  }
+
+  .segments span {
+    flex: 1;
+    border-radius: calc(0.35cqw * var(--corner-reach));
+    corner-shape: var(--corner);
+  }
+
+  .segments .is-on {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .field--menu {
+    width: 8cqw;
+  }
+
+  .field--wide {
+    width: 17.2cqw;
+  }
+
+  /* ---------- Snapshot ---------- */
+
+  .body {
+    display: grid;
+    gap: 1.2cqw;
+    padding: 1.9cqw 2cqw;
+  }
+
+  .snapshot {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2.06fr;
+    grid-template-rows: 13.6cqw 13.6cqw;
+    gap: 1.2cqw;
+    margin-top: 0.4cqw;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1cqw;
+    padding: 1.6cqw 1.3cqw;
+    border-radius: calc(var(--card-radius) * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--fill);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  /* Card titles, small and quiet in the dashboard's sans, with the dashboard's icon. */
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 0.7cqw;
+    color: var(--title);
+    font-size: 1.05cqw;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .title :global(.icon) {
+    font-size: 1.1em;
+    opacity: 0.8;
+  }
+
+  .figure {
+    margin-top: auto;
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 2.6cqw;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .figure--small {
+    margin-top: 0;
+    font-size: 1.6cqw;
+  }
+
+  .card--map {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .card--map svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--white);
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .card--map path,
+  .card--map circle {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .map-buildings {
+    fill: rgba(255, 255, 255, 0.07);
+    stroke-opacity: 0.6;
+    stroke-width: 0.75;
+  }
+
+  .map-walks {
+    stroke-opacity: 0.22;
+    stroke-width: 0.6;
+  }
+
+  .map-streets {
+    stroke-opacity: 0.34;
+    stroke-width: 1.25;
+  }
+
+  .map-pin {
+    fill: rgba(255, 255, 255, 0.2);
+    stroke-width: 1.25;
+  }
+
+  .map-pin--live {
+    fill: var(--white);
+  }
+
+  /* ---------- Compared with the previous 7 days, and the chart ---------- */
+
+  .compare .columns {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    margin-top: 1.4cqw;
+  }
+
+  .columns span {
+    display: grid;
+    gap: 1cqw;
+    padding: 0 1cqw;
+    border-left: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  .columns span:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .chart {
+    height: 8cqw;
+  }
+
+  /* ---------- Arriving: the outline fades up, the cards settle in turn ---------- */
+
+  @keyframes outline-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.8cqw);
+    }
+  }
+
+  :global(html[data-enter]) .dash {
+    animation: outline-in 900ms var(--ease-out) backwards;
+    animation-delay: var(--t0, 1200ms);
+  }
+
+  :global(html[data-enter]) .card {
+    animation: card-in 600ms var(--ease-out) backwards;
+    animation-delay: calc(var(--t0, 1200ms) + 200ms + var(--n) * 50ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html[data-enter]) .card {
+      animation-name: outline-in;
+    }
+  }
+</style>

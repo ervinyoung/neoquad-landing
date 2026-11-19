@@ -1,0 +1,80 @@
+---
+// The staff dashboard's line icons (Lucide, ISC licence), drawn on a 24 grid and sized by font size.
+const paths = {
+  trend: ['M22 7 13.5 15.5 8.5 10.5 2 17', 'M16 7h6v6'],
+  inbox: [
+    'M22 12h-6l-2 3h-4l-2-3H2',
+    'M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z',
+  ],
+  eye: [
+    'M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0',
+    'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+  ],
+  calendar: ['M8 2v4', 'M16 2v4', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z', 'M3 10h18'],
+  plus: ['M5 12h14', 'M12 5v14'],
+  user: ['M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2', 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0'],
+  building: [
+    'M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z',
+    'M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2',
+    'M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2',
+    'M10 6h4',
+    'M10 10h4',
+    'M10 14h4',
+    'M10 18h4',
+  ],
+  list: ['M3 6h.01', 'M3 12h.01', 'M3 18h.01', 'M8 6h13', 'M8 12h13', 'M8 18h13'],
+  alert: ['m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3', 'M12 9v4', 'M12 17h.01'],
+  ticket: ['M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z', 'M7 6v12'],
+  star: [
+    'M11.53 2.3a.53.53 0 0 1 .95 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.76a.53.53 0 0 1 .3.9l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.9l5.16-.76a2.12 2.12 0 0 0 1.6-1.16z',
+  ],
+  chevron: ['m6 9 6 6 6-6'],
+  'chevron-left': ['m15 18-6-6 6-6'],
+  'chevron-right': ['m9 18 6-6-6-6'],
+  clock: ['M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', 'M12 6v6l4 2'],
+  date: [
+    'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
+    'M3 9h18',
+    'M8 13h.01',
+    'M12 13h.01',
+    'M16 13h.01',
+    'M8 17h.01',
+    'M12 17h.01',
+    'M16 17h.01',
+  ],
+} as const;
+
+export type IconName = keyof typeof paths | 'appearance';
+
+interface Props {
+  name: IconName;
+  class?: string;
+}
+const { name, class: className } = Astro.props;
+---
+
+<svg class:list={['icon', className]} viewBox="0 0 24 24" aria-hidden="true">
+  {
+    name === 'appearance' ? (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" />
+      </>
+    ) : (
+      paths[name].map((d) => <path d={d} />)
+    )
+  }
+</svg>
+
+<style>
+  .icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>

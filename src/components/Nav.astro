@@ -96,6 +96,11 @@ const { audience } = Astro.props;
     setAudience(event.to.pathname);
     document.querySelector('.nav')?.setAttribute('data-first-screen', '');
   });
+  // While a page switch plays, everything hit-tests as the page root, so the bar reads again once
+  // the transition has finished (a restored scroll position may have put it over a light section).
+  document.addEventListener('astro:before-swap', (event) => {
+    event.viewTransition.finished.then(readUnder, readUnder);
+  });
   document.addEventListener('astro:page-load', () => {
     setAudience(location.pathname);
     watchHero();
@@ -109,7 +114,6 @@ const { audience } = Astro.props;
      between them as the page moves under it (data-over, set in the script above). */
   .nav {
     --ink: var(--white);
-    --track: rgba(255, 255, 255, 0.12);
     --pill: var(--white);
     --pill-ink: var(--black);
 
@@ -136,7 +140,6 @@ const { audience } = Astro.props;
 
   .nav[data-over='light'] {
     --ink: var(--graphite);
-    --track: rgba(28, 28, 30, 0.07);
     --pill: var(--graphite);
     --pill-ink: var(--white);
   }
@@ -219,21 +222,19 @@ const { audience } = Astro.props;
     }
   }
 
-  /* The switch. A second copy of the labels sits on top, in the pill's colours, clipped to the
-     active half, so the colour of the text changes exactly where the pill is. On pages for
-     neither audience the pill closes to nothing. */
+  /* The switch. No track: the pill is its only shape. A second copy of the labels sits on top, in
+     the pill's colours, clipped to the active half, so the colour of the text changes exactly
+     where the pill is. On pages for neither audience the pill closes to nothing. */
   .switch {
     position: relative;
     display: grid;
     grid-template-columns: 1fr 1fr;
     height: var(--control);
     border-radius: 999px;
-    background: var(--track);
     font-size: 0.9375rem;
     font-weight: 500;
     user-select: none;
     -webkit-user-select: none;
-    transition: background-color 320ms ease;
   }
 
   .switch a,
@@ -246,7 +247,7 @@ const { audience } = Astro.props;
 
   .switch a {
     border-radius: 999px;
-    color: color-mix(in srgb, var(--ink) 82%, transparent);
+    color: color-mix(in srgb, var(--ink) 72%, transparent);
     -webkit-touch-callout: none;
     transition: color 320ms ease;
   }
@@ -300,36 +301,35 @@ const { audience } = Astro.props;
     min-width: 0;
   }
 
-  /* The staff door needs a wide bar. Below that it is in the footer. */
+  /* The staff door needs a wide bar. Below that it is in the footer. Plain text, a step quieter
+     than the switch, so the action stays the only strong shape on this side. */
   .nav-signin {
     display: none;
     align-items: center;
     min-height: var(--control);
-    padding: 0 18px;
-    border-radius: 999px;
-    font-size: 0.9375rem;
+    padding: 0 14px;
+    font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
+    color: color-mix(in srgb, var(--ink) 66%, transparent);
     user-select: none;
     -webkit-user-select: none;
-    transition:
-      transform 160ms var(--ease-out),
-      background-color 160ms ease;
+    transition: color 320ms ease;
   }
 
   .nav-signin:active {
-    transform: scale(0.97);
+    color: var(--ink);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .nav-signin:hover {
-      background: color-mix(in srgb, var(--ink) 9%, transparent);
+      color: var(--ink);
     }
   }
 
   @media (min-width: 960px) {
     .nav {
-      --bar-max: 880px;
+      --bar-max: 800px;
     }
 
     .nav-signin {

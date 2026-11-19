@@ -15,14 +15,19 @@ Each piece hides how it works behind a small interface. Start from the page and 
 
 | Piece | Use | What it hides |
 | --- | --- | --- |
-| `Hero` | `<Hero scene="dusk" line={[…]}><Action to="app" /></Hero>`, plus an optional `slot="device"` | The window, the coast, the word-by-word headline, when the action arrives, and the two layouts (default, and the phone "stage" used when a device is given) |
-| `GlassPhone` | `<GlassPhone slot="device">…screen…</GlassPhone>` | The clear glass phone: body, rim, keys, Dynamic Island; scales to any width, and hands its screen's corner inward as `--screen-radius` |
-| `AppWireframe` | `<AppWireframe />` inside a `GlassPhone` | The neoQuad app drawn in glass and its animation (pins drop, sheet rises, events arrive, the live pin ripples) |
-| `Coast` | `<Coast scene="dusk" \| "blue-hour" />` | The moving sea and drifting clouds (WebGL), the progressive blur (one table of stops, used by the still picture and the living one), preloading the other scene |
+| `Hero` | `<Hero scene="dusk" line={[…]}><Action to="app" /></Hero>`, plus an optional `slot="device"` and `device="phone" \| "window"` | The window, the coast, the word-by-word headline, when the action arrives, and the layouts: default (line bottom left, action bottom right), and the stage when a device is given (phones and tall windows: line on top, device rising behind one wide button; wide windows: line and action bottom left, device rising on the right; a window larger, running off the right edge) |
+| `GlassPane` | inside a device shape, which sets `--pane-radius`, `--pane-frost`, `--pane-rim` | The hero glass both devices share: the frost, the light toward the top, the rim of light, the smoothed corner |
+| `GlassPhone` | `<GlassPhone slot="device">…screen…</GlassPhone>` | A phone of the hero glass (`GlassPane`) with its Dynamic Island; scales to any width (sizes in `cqw`) |
+| `GlassWindow` | `<GlassWindow slot="device">…screen…</GlassWindow>` with `<Hero device="window">` | A display-proportioned window of the same glass; sizes in `cqw` |
+| `AppWireframe` | `<AppWireframe />` inside a `GlassPhone` | What stands on the phone, all from the iOS app: its icon and name, the SBCC campus outline (`src/data/campus-map.json`, from `python3 tools/campus-map.py`: the app's places plus the OpenStreetMap footprints they come from), and event pins drawn as `PinCore` draws them, on their real places, one live with its red pulse |
+| `DashboardOutline` | `<DashboardOutline />` inside a `GlassWindow` | The staff dashboard's Insights view traced in hairlines (sidebar, header, four snapshot cards, the campus map tile, the comparison row, the chart's top), one figure from `dashboard/sample.ts`; fades up, cards settle in turn |
+| `Symbol` | `<Symbol name="fork.knife" />` | The app's SF Symbols, sized by font size like SwiftUI; `swift tools/sf-symbols.swift > src/icons/symbols.ts` adds one (Apple's SF Symbols licence applies) |
+| `Coast` | `<Coast scene="dusk" \| "blue-hour" />` | The photograph as a living place (WebGL, once the page is idle, paused off screen: a slow camera with parallax by depth, clouds on the wind, swell on the sea, from the map and plate made by `tools/coast-maps.py`), the soft first paint, the progressive blur (one table of stops, used by the still picture and the living one), preloading the other scene |
 | `Action` | `<Action to="app" \| "booking" tone="clear" \| "accent" compact? />` | Links, labels, the iPhone / web swap, the Liquid Glass button |
 | `Mark`, `Lockup` | `<Mark wave />`, `<Lockup />` | The seed artwork and its Wave |
+| `HowItWorks` | `<HowItWorks />` | The three steps (post, live on the map, walk over) drawn in glass on one strip of the coast, which joins into one window on wide screens and plays once, left to right, as it comes into view |
 | `Words` | `<Words parts={['Plain', { i: 'italic' }, 'br']} />` | Splitting a line into words that arrive in turn |
-| `Dashboard` | `<Dashboard />` | The staff screenshots, tabs and keyboard support |
+| `Dashboard` | `<Dashboard />` | The staff site's Insights, Events and New event screens rebuilt in HTML on its own 1862 × 1086 grid (every length `calc(var(--u) * px)`, so it scales sharp to any width), the shared sidebar, tabs and keyboard support. All figures, calendar events and the filled-in form come from `dashboard/sample.ts`, which derives every percentage and comparison so the screens agree; the map tile is `assets/dashboard/map.jpg` |
 | `Nav` | (placed by `Base`) | Subtle Liquid Glass that reads what is under it and switches ink; the switch; the page's action, always there; staff sign-in beside it on wide screens |
 | `Base` | `<Base audience="students" \| "schools" \| "none" …>` | Head tags, the persistent nav, footer, and the flags on `<html>` |
 | `Legal` | `<Legal name="privacy" \| "terms" title={[…]} />` | Layout, contents list and text from `src/content/legal/` |

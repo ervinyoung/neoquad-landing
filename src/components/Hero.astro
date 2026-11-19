@@ -5,14 +5,17 @@
 //   line    the headline, in parts: strings, { i: 'italic' } for the second thought, 'br' to break
 //   calm    set the line a size down, for a longer sentence
 //   <slot>  the action
-//   <slot name="device">  optional: something to stand on the photograph, such as a GlassPhone
+//   <slot name="device">  optional: something to stand on the photograph, a GlassPhone or a GlassWindow
+//   device  its shape, "phone" (the default) or "window"; it sets how the stage frames it
 //
 // The headline arrives word by word; the action follows once the last word has landed.
 //
 // Two layouts, chosen here and nowhere else:
 //   - Default: the line bottom left, the action bottom right.
-//   - Stage (phones, when a device is given): the line centred at the top, the device rising
-//     from the bottom edge, and the action as one wide button pinned beneath it.
+//   - Stage (when a device is given): the device rises out of the bottom edge. On phones and tall
+//     windows the line is centred above it and the action is one wide button pinned beneath it;
+//     on wide windows the line and its action hold the bottom left and the device stands to the
+//     right. A phone stands whole in its half; a window is larger and runs off the right edge.
 import Coast from './Coast.astro';
 import Words from './Words.astro';
 
@@ -21,8 +24,9 @@ interface Props {
   scene: 'dusk' | 'blue-hour';
   line: Part[];
   calm?: boolean;
+  device?: 'phone' | 'window';
 }
-const { scene, line, calm = false } = Astro.props;
+const { scene, line, calm = false, device = 'phone' } = Astro.props;
 
 const words = line
   .filter((part) => part !== 'br')
@@ -33,7 +37,7 @@ const actionDelay = 320 + words * 85 + 220;
 const staged = Astro.slots.has('device');
 ---
 
-<section class:list={['hero', `hero--${scene}`, calm && 'hero--calm', staged && 'hero--stage']}>
+<section class:list={['hero', `hero--${scene}`, calm && 'hero--calm', staged && ['hero--stage', `hero--${device}`]]}>
   <div class="window hero-window">
     <Coast scene={scene} />
     {staged && <div class="hero-device" style={`--t0:${actionDelay - 300}ms`}><slot name="device" /></div>}
@@ -112,21 +116,128 @@ const staged = Astro.slots.has('device');
     }
   }
 
-  /* The device only stands on the stage. */
+  /* ---------- Stage: the device stands on the photograph ----------
+     One system, two arrangements. The device is placed by four values and the arrangements only
+     set them: its width, how much of it shows (in widths), where its left edge is, and the line it
+     stands on (it continues below that line, out of sight). */
   .hero-device {
     display: none;
   }
 
-  /* ---------- Stage: phones ---------- */
-  @media (max-width: 699px) {
+  .hero--stage .hero-device {
+    display: block;
+    position: absolute;
+    left: var(--device-left);
+    top: calc(100% - var(--device-floor) - var(--device-shown) * var(--device-width));
+    width: var(--device-width);
+  }
+
+  .hero--stage .hero-copy {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* In the page switch the device gets a layer of its own, so the coast's layer never covers it:
+     the leaving one fades and sinks a little. One name per shape, so a phone is never stretched
+     into a window. Named only while the switch runs (Astro marks <html> then): a named element is
+     a backdrop root, and the glass would have nothing behind it to frost. The arriving device waits
+     until the switch is over, then rises with its frost live. */
+  :global(html[data-astro-transition]) .hero--phone .hero-device {
+    view-transition-name: hero-phone;
+  }
+
+  :global(html[data-astro-transition]) .hero--window .hero-device {
+    view-transition-name: hero-window;
+  }
+
+  :global(::view-transition-old(hero-phone)),
+  :global(::view-transition-old(hero-window)) {
+    animation: device-leave 240ms var(--ease-out) both;
+  }
+
+  :global(::view-transition-new(hero-phone)),
+  :global(::view-transition-new(hero-window)) {
+    animation: none;
+  }
+
+  @keyframes device-leave {
+    to {
+      opacity: 0;
+      transform: translateY(6%);
+    }
+  }
+
+  @keyframes device-rise {
+    from {
+      opacity: 0;
+      transform: translateY(34%);
+    }
+  }
+
+  @keyframes device-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  :global(html[data-enter]) .hero--stage .hero-device {
+    animation: device-rise 1400ms var(--ease-glass) backwards;
+    animation-delay: calc(var(--t0) - 420ms);
+  }
+
+  /* The switch takes 900ms (the coast's pull focus, global.css). */
+  :global(html[data-enter='switch']) .hero--stage .hero-device {
+    animation-delay: max(calc(var(--t0) - 420ms), 900ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html[data-enter]) .hero--stage .hero-device {
+      animation-name: device-fade;
+      animation-duration: 800ms;
+    }
+  }
+
+  /* Phones, and any window taller than it is wide: the line centred at the top, the device rising
+     from the bottom edge, and the action as one wide button pinned beneath it, mirroring the bar
+     at the top; the device runs on behind it. On a short window the device gets smaller,
+     never closer to the headline. */
+  @media (max-width: 699px), (max-aspect-ratio: 5/6) {
+    .hero--stage {
+      /* The photograph softens under the line at the top as well as under the action. */
+      --coast-soft-top: 1;
+      --line-top: 104px;
+      --line-size: clamp(2.5rem, 1.1rem + 7.4vw, 4.5rem);
+      --action-height: calc(var(--control) + 2 * var(--bar-pad));
+      --device-shown: 1.42;
+      --device-room: calc(
+        100svh - 2 * var(--gutter) - var(--line-top) - env(safe-area-inset-top, 0px) - var(--line-lines, 3.12) * var(--line-size) - 28px -
+          var(--action-height) - var(--bar-gap)
+      );
+      --device-width: clamp(168px, calc(var(--device-room) / var(--device-shown)), min(84vw, 400px));
+      --device-left: calc(50% - var(--device-width) / 2);
+      --device-floor: calc(var(--action-height) + var(--bar-gap));
+    }
+
+    /* A longer sentence, a size down, over more lines. */
+    .hero--stage.hero--calm {
+      --line-size: clamp(2.125rem, 0.9rem + 6vw, 3.75rem);
+      --line-lines: 4.4;
+    }
+
+    /* A window is wide, so here it is drawn larger than the screen and runs off the right edge:
+       its sidebar and first cards stay big enough to read. */
+    .hero--stage.hero--window {
+      --device-shown: 0.6;
+      --device-width: clamp(520px, calc(var(--device-room) / var(--device-shown)), 170vw);
+      --device-left: max(var(--bar-gap), 6vw);
+    }
+
     .hero--stage .hero-window {
       align-items: stretch;
       padding: 0;
     }
 
     .hero--stage .hero-copy {
-      position: relative;
-      z-index: 1;
       flex-direction: column;
       flex-wrap: nowrap;
       align-items: stretch;
@@ -136,6 +247,7 @@ const staged = Astro.slots.has('device');
     }
 
     .hero--stage .hero-line {
+      flex: none;
       padding-inline: 8px;
       font-size: var(--line-size);
       text-shadow:
@@ -159,50 +271,42 @@ const staged = Astro.slots.has('device');
       backdrop-filter: blur(28px) saturate(1.7) brightness(1.08);
       text-shadow: 0 1px 2px rgba(30, 24, 44, 0.3);
     }
+  }
 
-    /* The device rises out of the bottom edge and stays partly below it: always sunk to the same
-       line of its screen, just under the second event, where the button takes over. On a short
-       window the device gets smaller, never closer to the headline. */
+  /* Wider windows: the words hold the bottom left, the line over its action, and the device stands
+     in the right half, rising out of the window's bottom edge. Its size comes from the window's height, within what the width allows. */
+  @media (min-width: 700px) and (min-aspect-ratio: 5/6) {
     .hero--stage {
-      /* The photograph softens under the line at the top as well as under the action. */
-      --coast-soft-top: 1;
-      --line-top: 104px;
-      --line-size: clamp(2.5rem, 1.1rem + 7.4vw, 3.25rem);
-      --action-height: calc(var(--control) + 2 * var(--bar-pad));
-      /* How much of the device's width shows above the button, and the room it has to do so. */
-      --device-shown: 1.5;
-      --device-room: calc(
-        100svh - 2 * var(--gutter) - var(--line-top) - env(safe-area-inset-top, 0px) - 3.12 * var(--line-size) - 28px -
-          var(--action-height) - var(--bar-gap)
-      );
-      --device-width: clamp(168px, calc(var(--device-room) / var(--device-shown)), min(72vw, 310px));
+      --device-shown: 1.6;
+      --device-room: calc(100svh - 2 * var(--gutter) - 128px);
+      --device-width: clamp(240px, calc(var(--device-room) / var(--device-shown)), min(36vw, 540px));
+      --device-left: calc(75% - var(--device-width) / 2);
+      --device-floor: 0px;
     }
 
-    .hero--stage .hero-device {
-      display: block;
-      position: absolute;
-      left: 50%;
-      top: calc(100% - var(--action-height) - var(--bar-gap) - var(--device-shown) * var(--device-width));
-      width: var(--device-width);
-      transform: translateX(-50%);
+    /* A window stands larger, from just short of the middle, and just meets the right edge, its map
+       tile still in view. */
+    .hero--stage.hero--window {
+      --device-shown: 0.58;
+      --device-width: clamp(520px, calc(var(--device-room) / var(--device-shown)), 58vw);
+      --device-left: 45%;
     }
 
-    @keyframes device-rise {
-      from {
-        opacity: 0;
-        transform: translate(-50%, 34%);
-      }
+    .hero--stage .hero-copy {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: clamp(24px, 2.4vw, 36px);
+      width: calc(var(--device-left) - var(--margin));
     }
 
-    :global(html[data-enter]) .hero--stage .hero-device {
-      animation: device-rise 1400ms var(--ease-glass) backwards;
-      animation-delay: calc(var(--t0) - 420ms);
+    .hero--stage .hero-line {
+      flex: none;
+      width: 100%;
+      font-size: clamp(2.75rem, 0.9rem + 5.1vw, 6.5rem);
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      :global(html[data-enter]) .hero--stage .hero-device {
-        animation: none;
-      }
+    .hero--stage.hero--calm .hero-line {
+      font-size: clamp(2.125rem, 4.2vw - 0.2rem, 4.75rem);
     }
   }
 </style>
