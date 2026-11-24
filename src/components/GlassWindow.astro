@@ -26,8 +26,10 @@ import GlassPane from './GlassPane.astro';
     aspect-ratio: 16 / 10;
   }
 
+  /* It fades with the pane (--presence, see GlassPane). */
   .glass-window-screen {
     position: absolute;
     inset: 0;
+    opacity: var(--presence);
   }
 </style>

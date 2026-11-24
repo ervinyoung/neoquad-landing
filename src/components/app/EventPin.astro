@@ -1,0 +1,387 @@
+---
+// An event on the campus map, as EventPin draws it (neoQuad-ios 5d968ad, Features/Map/CampusMap.swift):
+// Find My's person pin. The event's picture (EventArtwork, compact), 40 pt, in a 2.5 pt ring that runs
+// into a short rounded point (PinShape: it leaves the circle 35 degrees either side of straight down,
+// 6 pt long). Without a picture the disc is its category's colour, a gradient from 78%
+// (EventPlaceholder), holding the category's symbol at 0.42 of the disc. Its point stands on (x, y),
+// in percent of the map. What it shows comes from app/pin.ts, its shape from app/pin-shape.ts.
+//   live      the ring turns the Live green (Brand.liveDot)
+//   count     several events on one spot: 11 pt bold in an 18 pt white capsule, 6 pt out, 5 pt up
+//   going     instead of a count: checkmark, 9 pt, in an 18 pt Coastal disc with a 1.5 pt white rim
+//   food      free food later on: fork.knife, 9 pt bold, in an 18 pt orange disc with a 1.5 pt white
+//             rim, 5 pt out at the bottom left, 4 pt up
+//   LIVE      free food right now, instead: fork.knife and LIVE, 10 pt heavy, in an 18 pt orange
+//             capsule with a 1.5 pt white rim, over the top of the pin, 12 pt up
+//   selected  scaled 1.15 from its point, inside a 70 pt halo (Coastal, or Live green when live;
+//             25% fill, 50% rim), 12 pt above the pin
+// Two tones. "colour" is the app's own, in dark mode. "outline" is the same pin engraved for the
+// hero's glass phone, in the inks its scene sets (--ink, --rule-strong, --tint, --hair): a hairline
+// pin, the symbol in white, a picture kept as it is; live is the solid 2.5 pt ring in Happening Now's
+// live-ring ink, the badges hairline capsules.
+// Motion, as the app has it: placed, it grows in from its point (from 0.6, with a fade) on
+// spring(0.45, bounce 0.25), the welcome's unlock; selecting lifts it on spring(0.3, bounce 0.15).
+// It arrives after --t (the scene's, or `delay`) and is selected after --select, and both wait while
+// the scene holds --pin-play at paused. Sizes are in --pt, set by the scene.
+import { Image } from 'astro:assets';
+import Symbol from '../Symbol.astro';
+import type { Pin } from './pin';
+import { badges, cutout, footprint, reach, ring, shape, tag } from './pin-shape';
+import { lift, place } from './spring';
+
+interface Props {
+  pin: Pin;
+  at: { x: number; y: number };
+  tone: 'colour' | 'outline';
+  selected?: boolean;
+  /** It arrives on the map as the scene plays; otherwise it is already there. */
+  placed?: boolean;
+  /** When it arrives, if not at the scene's --t. */
+  delay?: string;
+  /** Outline only: the pins drawn over this one, by how far their points are from its point, in pt,
+   *  and when each arrives, if it is placed, soonest first. Glass shows what it covers, so their
+   *  footprints are cut out of this one, from the moment the first of them arrives. */
+  under?: { pin: Pin; dx: number; dy: number; delay?: string }[];
+}
+const { pin, at, tone, selected, placed, delay, under = [] } = Astro.props;
+
+const motion = `--place:${place.easing};--place-ms:${place.ms}ms;--lift:${lift.easing};--lift-ms:${lift.ms}ms`;
+const style = `left:${at.x}%;top:${at.y}%;--fill:${pin.photo ? 'transparent' : pin.fill};${motion}${delay ? `;--t:${delay}` : ''}`;
+// In outline nothing shows through, as the app's opaque pins hide what they cover: not the pins
+// over it, not its ring and picture under its badges, not a corner badge under the LIVE tag.
+const outline = tone === 'outline';
+const cover = (d: string) => (outline && d ? `--cover:${cutout([{ d }])}` : undefined);
+const coverPins = outline && under.length ? `;--cover:${cutout(under.map((o) => ({ d: footprint(o.pin), dx: o.dx, dy: o.dy })))}` : '';
+const coveredAt = outline ? under[0]?.delay : undefined;
+---
+
+<span
+  class:list={['pin', `pin--${tone}`, placed && 'pin--placed', selected && 'pin--selected', pin.live && 'pin--live', coveredAt && 'pin--covered']}
+  style={`${style}${coverPins};--reach:${reach}${coveredAt ? `;--covered-at:${coveredAt}` : ''}`}
+>
+  <span class="pin-place">
+    <span class="pin-lift">
+      {selected && <span class="halo" />}
+      <span class="pin-layer" style={cover(badges(pin))}>
+        <svg class="ring" viewBox="0 0 45 51">
+          {outline ? <path class="edge" d={shape} /> : <path d={shape} />}
+          {outline && pin.live && <path class="band" d={ring} fill-rule="evenodd" />}
+        </svg>
+        <span class="art">
+          {pin.photo ? <Image src={pin.photo} alt="" width={120} height={120} format="webp" loading="eager" /> : <Symbol name={pin.symbol} />}
+        </span>
+      </span>
+      <span class="pin-layer" style={cover(tag(pin))}>
+        {pin.count > 1 && <span class="count">{pin.count}</span>}
+        {
+          pin.count === 1 && pin.going && (
+            <span class="badge going">
+              <Symbol name="checkmark" />
+            </span>
+          )
+        }
+        {
+          pin.food && !pin.foodLive && (
+            <span class="badge food">
+              <Symbol name="fork.knife" />
+            </span>
+          )
+        }
+      </span>
+      {
+        pin.foodLive && (
+          <span class="live-tag">
+            <Symbol name="fork.knife" />
+            LIVE
+          </span>
+        )
+      }
+    </span>
+  </span>
+</span>
+
+<style>
+  .pin {
+    position: absolute;
+    width: calc(45 * var(--pt));
+    height: calc(51 * var(--pt));
+    margin: calc(-51 * var(--pt)) 0 0 calc(-22.5 * var(--pt));
+  }
+
+  /* The app's colours, dark mode (Palette.swift, EventTag.food: system orange). */
+  .pin--colour {
+    --ring: var(--white);
+    --food: #ff9f0a;
+    --coastal: #2d86ec;
+    --live: #1fa862;
+    --halo: var(--coastal);
+  }
+
+  .pin--colour.pin--live {
+    --ring: var(--live);
+    --halo: var(--live);
+  }
+
+  .pin-place,
+  .pin-lift {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 100%;
+  }
+
+  .pin-layer {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Outline: the pin and each layer grow a transparent border as far as the pin draws (the badges),
+     so a mask over the border box reaches everything, then take their cut-outs (--cover). */
+  .pin--outline,
+  .pin--outline .pin-layer {
+    box-sizing: content-box;
+    border: calc(var(--reach) * var(--pt)) solid transparent;
+    mask-image: var(--cover, none);
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+  }
+
+  .pin--outline {
+    margin: calc((-51 - var(--reach)) * var(--pt)) 0 0 calc((-22.5 - var(--reach)) * var(--pt));
+  }
+
+  /* Until the first pin over it arrives (half way into its fade), a solid layer fills the cut-outs. */
+  @keyframes uncover {
+    to {
+      mask-size:
+        100% 100%,
+        0 0;
+    }
+  }
+
+  .pin--covered {
+    mask-image: var(--cover), linear-gradient(#000 0 0);
+    mask-size:
+      100% 100%,
+      100% 100%;
+    animation: uncover 1ms calc(var(--covered-at) + 120ms) both;
+  }
+
+  .pin--outline .pin-layer {
+    inset: calc(-1 * var(--reach) * var(--pt));
+    width: calc(45 * var(--pt));
+    height: calc(51 * var(--pt));
+  }
+
+  .ring {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .pin--colour .ring {
+    fill: var(--ring);
+    filter: drop-shadow(0 calc(1.5 * var(--pt)) calc(3 * var(--pt)) rgba(0, 0, 0, 0.25));
+  }
+
+  .pin--outline .edge {
+    fill: var(--tint);
+    stroke: var(--rule-strong);
+    stroke-width: var(--hair);
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Live: the ring drawn solid, in the ink of the live rings in Happening Now below it (HomeSheet). */
+  .pin--outline .band {
+    fill: var(--rule-strong);
+  }
+
+  .art {
+    position: absolute;
+    left: calc(2.5 * var(--pt));
+    top: calc(2.5 * var(--pt));
+    display: grid;
+    place-items: center;
+    width: calc(40 * var(--pt));
+    height: calc(40 * var(--pt));
+    overflow: hidden;
+    border-radius: 50%;
+    font-size: calc(40 * 0.42 * var(--pt));
+  }
+
+  .pin--colour .art {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--fill) 78%, transparent), var(--fill));
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .pin--outline .art {
+    color: var(--ink);
+  }
+
+  .art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ---------- Badges ---------- */
+
+  .count {
+    position: absolute;
+    top: calc(-5 * var(--pt));
+    right: calc(-6 * var(--pt));
+    min-width: calc(18 * var(--pt));
+    height: calc(18 * var(--pt));
+    padding: 0 calc(5 * var(--pt));
+    border-radius: 999px;
+    font-size: calc(11 * var(--pt));
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: calc(18 * var(--pt));
+    text-align: center;
+  }
+
+  .badge {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: calc(18 * var(--pt));
+    height: calc(18 * var(--pt));
+    border-radius: 50%;
+    font-size: calc(9 * var(--pt));
+  }
+
+  .going {
+    top: calc(-5 * var(--pt));
+    right: calc(-5 * var(--pt));
+  }
+
+  .food {
+    left: calc(-5 * var(--pt));
+    bottom: calc(4 * var(--pt));
+  }
+
+  .live-tag {
+    position: absolute;
+    left: 50%;
+    top: calc(-12 * var(--pt));
+    display: flex;
+    align-items: center;
+    gap: calc(3 * var(--pt));
+    height: calc(18 * var(--pt));
+    padding: 0 calc(6 * var(--pt));
+    border-radius: 999px;
+    translate: -50% 0;
+    font-size: calc(10 * var(--pt));
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .pin--colour .count {
+    background: var(--white);
+    box-shadow: 0 calc(0.5 * var(--pt)) calc(1.5 * var(--pt)) rgba(0, 0, 0, 0.2);
+    color: var(--black);
+  }
+
+  .pin--colour .badge {
+    box-shadow: inset 0 0 0 calc(1.5 * var(--pt)) var(--white);
+    color: var(--white);
+  }
+
+  .pin--colour .going {
+    background: var(--coastal);
+  }
+
+  .pin--colour .food {
+    background: var(--food);
+  }
+
+  .pin--colour .live-tag {
+    background: var(--food);
+    box-shadow:
+      inset 0 0 0 calc(1.5 * var(--pt)) var(--white),
+      0 calc(1 * var(--pt)) calc(2 * var(--pt)) rgba(0, 0, 0, 0.25);
+    color: var(--white);
+  }
+
+  .pin--outline :is(.count, .badge, .live-tag) {
+    background: var(--tint);
+    box-shadow: inset 0 0 0 var(--hair) var(--rule-strong);
+    color: var(--ink);
+  }
+
+  .halo {
+    position: absolute;
+    left: 50%;
+    top: calc(-12 * var(--pt));
+    width: calc(70 * var(--pt));
+    height: calc(70 * var(--pt));
+    margin-left: calc(-35 * var(--pt));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--halo) 25%, transparent);
+    box-shadow: inset 0 0 0 calc(1 * var(--pt)) color-mix(in srgb, var(--halo) 50%, transparent);
+  }
+
+  .pin--outline .halo {
+    --halo: var(--ink);
+  }
+
+  /* ---------- Motion ---------- */
+
+  @keyframes pin-grow {
+    from {
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes pin-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes pin-lift {
+    from {
+      transform: none;
+    }
+  }
+
+  .pin--placed .pin-place {
+    animation:
+      pin-grow var(--place-ms) var(--place) var(--t, 0ms) backwards,
+      pin-fade 250ms var(--ease-out) var(--t, 0ms) backwards;
+    animation-play-state: var(--pin-play, running);
+  }
+
+  .pin--selected .pin-lift {
+    transform: scale(1.15);
+    animation: pin-lift var(--lift-ms) var(--lift) var(--select, 0ms) backwards;
+    animation-play-state: var(--pin-play, running);
+  }
+
+  /* The halo arrives with the selection: from 0.6, fading in. */
+  .pin--selected .halo {
+    animation:
+      pin-grow var(--lift-ms) var(--lift) var(--select, 0ms) backwards,
+      pin-fade 200ms var(--ease-out) var(--select, 0ms) backwards;
+    animation-play-state: var(--pin-play, running);
+  }
+
+  /* Reduce Motion, as the app does it: the pin only fades in, and the selection settles at once. */
+  @media (prefers-reduced-motion: reduce) {
+    .pin--placed .pin-place {
+      animation: pin-fade 250ms var(--ease-out) var(--t, 0ms) backwards;
+      animation-play-state: var(--pin-play, running);
+    }
+
+    .pin--selected .pin-lift {
+      animation-duration: 150ms;
+      animation-timing-function: ease-out;
+    }
+
+    .pin--selected .halo {
+      animation-duration: 150ms, 200ms;
+      animation-timing-function: ease-out, var(--ease-out);
+    }
+  }
+</style>

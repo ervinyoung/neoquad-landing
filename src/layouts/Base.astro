@@ -8,6 +8,10 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { links } from '../config';
 import '../styles/global.css';
+// Every hero's line is set in this serif, roman and italic. Fetched with the page, so on a slow link
+// the words arrive in their own face rather than a fallback that swaps seconds later.
+import serif from '@fontsource/ibm-plex-serif/files/ibm-plex-serif-latin-500-normal.woff2?url';
+import serifItalic from '@fontsource/ibm-plex-serif/files/ibm-plex-serif-latin-500-italic.woff2?url';
 
 interface Props {
   title: string;
@@ -30,6 +34,8 @@ const ogImage = new URL('/og-image.jpg', Astro.site);
     <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={serif} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={serifItalic} as="font" type="font/woff2" crossorigin />
     {audience === 'students' && <meta name="apple-itunes-app" content={`app-id=${links.appStoreId}`} />}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -41,9 +47,11 @@ const ogImage = new URL('/og-image.jpg', Astro.site);
       // Flags the stylesheet reads from <html>. A page switch resets <html>, so they are put back after each one.
       //   js          scripting is on (scroll reveals may hide content until seen)
       //   data-ios    an iPhone: the student action is the App Store
-      //   data-first  the first page of the visit (the mark plays its Wave)
+      //   data-first  the first page of the visit, until the mark has played its Wave (Mark.astro)
       //   data-enter  a page is arriving: "load" on the first page, "switch" after a page switch
       //   data-dir    "back" when switching toward Students, so the words leave the right way
+      //   data-below  the first screen is mostly scrolled away, so its layers sit out a switch rather
+      //               than fly in from off screen (global.css); read for each side of the switch
       (function () {
         var root = document.documentElement;
         var dir = '';
@@ -53,6 +61,12 @@ const ogImage = new URL('/og-image.jpg', Astro.site);
           root.setAttribute('data-enter', enter);
           if (dir) root.setAttribute('data-dir', dir);
         };
+        var below = function () {
+          var first = document.querySelector('main > *');
+          var out = !!first && first.getBoundingClientRect().bottom < innerHeight / 2;
+          if (out) root.setAttribute('data-below', '');
+          else root.removeAttribute('data-below');
+        };
         flag('load');
         root.setAttribute('data-first', '');
         document.addEventListener('astro:before-preparation', function (event) {
@@ -60,8 +74,10 @@ const ogImage = new URL('/og-image.jpg', Astro.site);
           if (dir) root.setAttribute('data-dir', dir);
           else root.removeAttribute('data-dir');
         });
+        document.addEventListener('astro:after-preparation', below);
         document.addEventListener('astro:after-swap', function () {
           flag('switch');
+          below();
         });
       })();
     </script>

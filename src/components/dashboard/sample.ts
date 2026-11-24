@@ -3,7 +3,8 @@
 // involved + not involved = verified, percentages come from the counts, and each
 // comparison is worked out from this week and the week before.
 
-export const account = { email: 'studentlife@sbcc.edu' };
+// A placeholder mailbox on a domain reserved for examples (RFC 2606), never a real address.
+export const account = { email: 'studentlife@example.edu' };
 export const initials = account.email.slice(0, 2).toUpperCase();
 
 export const range = { from: 'Oct 13, 2026', to: 'Oct 19, 2026' };

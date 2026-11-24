@@ -6,7 +6,7 @@ import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import Action from '../components/Action.astro';
 import GlassPhone from '../components/GlassPhone.astro';
-import AppWireframe from '../components/AppWireframe.astro';
+import AppHome from '../components/AppHome.astro';
 import HowItWorks from '../components/HowItWorks.astro';
 import { links, campus } from '../config';
 
@@ -51,7 +51,7 @@ const qr = await QRCode.toString(links.appStore, {
   description={`Clubs, workshops, free food and games at ${campus.name}, posted by the people running them. Free for students.`}
 >
   <Hero scene="dusk" line={[`Every event at ${campus.short}.`, 'br', { i: 'One place.' }]}>
-    <GlassPhone slot="device"><AppWireframe /></GlassPhone>
+    <GlassPhone slot="device"><AppHome /></GlassPhone>
     <Action to="app" />
   </Hero>
 
@@ -61,7 +61,7 @@ const qr = await QRCode.toString(links.appStore, {
         Clubs, workshops, free food and games, <i>posted by the people running them.</i>
       </h2>
 
-      <ul class="screens">
+      <ul class="rail screens">
         {
           screens.map((screen, i) => (
             <li class="screen" data-reveal style={`--i:${i}`}>
@@ -113,32 +113,6 @@ const qr = await QRCode.toString(links.appStore, {
     max-width: 17em;
   }
 
-  .screens {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min(78%, 340px);
-    gap: 16px;
-    /* It scrolls sideways only. The cards rise into place as they appear, so the row keeps room
-       below them for that (and gives it back with the margin), or their last line would be cut. */
-    margin: clamp(56px, 8vw, 112px) calc(-1 * var(--margin)) calc(-1 * var(--reveal-rise));
-    padding: 0 var(--margin) var(--reveal-rise);
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--margin);
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .screens::-webkit-scrollbar {
-    display: none;
-  }
-
-  .screen {
-    scroll-snap-align: start;
-  }
-
   /* The whole phone, standing in its own quiet room. With a pointer, it rises a little to meet it. */
   .screen-frame {
     border-radius: calc(var(--window-radius) * var(--corner-reach));
@@ -163,20 +137,23 @@ const qr = await QRCode.toString(links.appStore, {
     margin-top: 28px;
   }
 
+  /* The second thought always takes its own line, so a caption breaks where it was written to. */
+  .screen h3 i {
+    display: block;
+  }
+
   .screen p {
     margin-top: 10px;
     max-width: 26em;
   }
 
+  /* Side by side, the three share their rows, so every description starts on one line. */
   @media (min-width: 900px) {
-    .screens {
-      grid-auto-flow: row;
-      grid-template-columns: repeat(3, 1fr);
-      gap: clamp(20px, 2.4vw, 32px);
-      margin-inline: 0;
-      margin-bottom: 0;
-      padding: 0;
-      overflow: visible;
+    .screen {
+      display: grid;
+      grid-row: span 3;
+      grid-template-rows: subgrid;
+      row-gap: 0;
     }
   }
 

@@ -1,0 +1,143 @@
+---
+// The home screen's map: SBCC in hairlines, from the same OpenStreetMap footprints the app's places
+// come from, north up and framed as the app frames campus above its sheet (tools/campus-map.py
+// writes src/data/campus-map.json), with the demo campus's events on it as the app pins them at
+// its launch zoom (app/pin.ts, app/sample.ts), each pin's point on its spot (app/EventPin, outline).
+// The pins are glass like the rest, so the map leaves out its lines under each one (its footprint,
+// app/pin-shape.ts), and a pin is cut away where a later one stands over it: nothing shows through.
+// They arrive as in the app's welcome: north to south over 0.6 s, each grown from its point
+// (CampusMap.swift, revealDelays), once the map is up. The ground under a pin is left out only as
+// the pin arrives, on the same spring, so the map never shows a gap waiting for its pin.
+import EventPin from './EventPin.astro';
+import { onMap } from './map';
+import { pins } from './pin';
+import { box, footprint } from './pin-shape';
+import { events } from './sample';
+import { place } from './spring';
+import map from '../../data/campus-map.json';
+
+const shown = pins(events).map((pin) => ({ pin, at: onMap(map, pin) }));
+const delay = (i: number) => `calc(var(--t0, 1200ms) + 420ms + ${Math.round((i / Math.max(shown.length - 1, 1)) * 600)}ms)`;
+// One point in the map's units: the phone is 402 pt wide and the map 100.
+const pt = map.width / 402;
+const ground = ({ x, y }: { x: number; y: number }) =>
+  `translate(${(x / 100) * map.width} ${(y / 100) * map.height}) scale(${pt}) translate(${-box.width / 2} ${-box.height})`;
+// Pins drawn later (further south) stand over earlier ones: each pin is told which, in points.
+const toPt = (percent: number, side: number) => (percent / 100) * side / pt;
+const over = (i: number) =>
+  shown
+    .slice(i + 1)
+    .map((o, j) => ({ pin: o.pin, dx: toPt(o.at.x - shown[i].at.x, map.width), dy: toPt(o.at.y - shown[i].at.y, map.height), delay: delay(i + 1 + j) }))
+    .filter(({ dx, dy }) => Math.abs(dx) < 80 && Math.abs(dy) < 90);
+---
+
+<svg class="map" style={`--place:${place.easing};--place-ms:${place.ms}ms`} viewBox={`0 0 ${map.width} ${map.height}`} aria-hidden="true">
+  <mask id="home-map-pins" maskUnits="userSpaceOnUse" x="0" y="0" width={map.width} height={map.height}>
+    <rect width={map.width} height={map.height} fill="#fff" stroke="none" />
+    {
+      shown.map(({ pin, at }, i) => (
+        <g transform={ground(at)}>
+          <path class="hole" d={footprint(pin)} fill="#000" stroke="none" style={`--t:${delay(i)}`} />
+        </g>
+      ))
+    }
+  </mask>
+  <g mask="url(#home-map-pins)">
+    <path class="map-shore" d={map.shore} />
+    <path class="map-streets" d={map.streets} />
+    <path class="map-walks" d={map.walks} />
+    <path class="map-buildings" d={map.buildings} />
+  </g>
+</svg>
+
+{shown.map(({ pin, at }, i) => <EventPin tone="outline" pin={pin} at={at} placed delay={delay(i)} under={over(i)} />)}
+
+<style>
+  /* Buildings brightest, walkways quietest, and all of it a step below the pins' hairline
+     (--rule-strong), so the events lead and the campus is the ground they stand on. It fades out
+     under the status bar, toward the sides, and just above the sheet, the way the glass blurs what
+     lies under it. */
+  .map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--white);
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    -webkit-mask:
+      linear-gradient(180deg, transparent 4%, #000 12%, #000 47%, transparent 53%),
+      linear-gradient(90deg, transparent 1%, #000 12%, #000 88%, transparent 99%);
+    -webkit-mask-composite: source-in;
+    mask:
+      linear-gradient(180deg, transparent 4%, #000 12%, #000 47%, transparent 53%) intersect,
+      linear-gradient(90deg, transparent 1%, #000 12%, #000 88%, transparent 99%);
+  }
+
+  .map path {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .map-buildings {
+    fill: rgba(255, 255, 255, 0.05);
+    stroke-opacity: 0.42;
+    stroke-width: 0.75;
+  }
+
+  .map-walks {
+    stroke-opacity: 0.18;
+    stroke-width: 0.6;
+  }
+
+  .map-streets {
+    stroke-opacity: 0.28;
+    stroke-width: 1.25;
+  }
+
+  .map-shore {
+    stroke-opacity: 0.4;
+    stroke-width: 1;
+  }
+
+  @keyframes map-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  :global(html[data-enter]) .map {
+    animation: map-in 900ms var(--ease-out) backwards;
+    animation-delay: var(--t0, 1200ms);
+  }
+
+  /* A pin's hole in the ground arrives with it, exactly as the pin does (EventPin, placed). */
+  .hole {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+
+  @keyframes hole-grow {
+    from {
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes hole-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .hole {
+    animation:
+      hole-grow var(--place-ms) var(--place) var(--t) backwards,
+      hole-fade 250ms var(--ease-out) var(--t) backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hole {
+      animation: hole-fade 250ms var(--ease-out) var(--t) backwards;
+    }
+  }
+</style>

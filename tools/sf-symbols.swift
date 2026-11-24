@@ -15,12 +15,30 @@ import CoreText
 
 // The symbol names, exactly as the app's Swift source names them.
 let names = [
-  "chevron.right",       // row disclosure (EventCardView, SearchTabView)
+  // EventCategory.icon, every category (Event.swift)
   "fork.knife",          // EventCategory.food
   "graduationcap.fill",  // EventCategory.academic
   "paintpalette.fill",   // EventCategory.artsCulture
   "person.3.fill",       // EventCategory.clubMeeting
-  "figure.walk",         // Directions (EventLiveActivityWidget, PlaceDetailView)
+  "briefcase.fill",      // EventCategory.career
+  "party.popper.fill",   // EventCategory.social
+  "figure.run",          // EventCategory.sportsRec
+  "sparkles",            // EventCategory.other
+  "heart.fill",          // EventCategory.wellness
+  "hands.sparkles.fill", // EventCategory.communityService
+  "map.fill",            // map controls: Map Modes (CampusMap)
+  "location",            // map controls: Show Campus (CampusMap)
+  "plus",                // New Event, beside the Events title (EventsScreen)
+  // The tabs (RootView). A tab bar draws its symbols in their fill variant; Orgs is person.3.fill.
+  "calendar",                 // Events
+  "building.2.fill",          // Places
+  "person.crop.circle.fill",  // Me
+  // How it works: New Event's Cancel and Submit, the detail page's close
+  // button and the tracker's Going icon, the verified badge, and Student Life's logo.
+  "xmark",                // CreateEventScreen Cancel, CloseButton (Sheet)
+  "checkmark",            // CreateEventScreen Submit, TrackerCard (EventTracker), EventPin's Going badge
+  "checkmark.seal.fill",  // VerifiedBadge (Primitives)
+  "star.fill",            // Student Life's logo, symbol:star.fill (SampleCampus)
 ]
 let fontPath = "/Library/Fonts/SF-Pro-Text-Semibold.otf"
 let size: CGFloat = 24

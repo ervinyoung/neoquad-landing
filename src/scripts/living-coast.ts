@@ -182,10 +182,11 @@ function camera(t: number, pointer: { x: number; y: number }, calm: boolean) {
       0.5 + sway * (0.3 * Math.sin((TAU * t) / 71) + 0.1 * pointer.x),
       0.5 + sway * (0.14 * Math.sin((TAU * t) / 53 + 1.3) + 0.06 * pointer.y),
     ] as const,
-    // The wind carries the high clouds 9% of the picture's width either side over 195 seconds: from
-    // the first frame at its fastest, about 4 px a second on a laptop, one way for over a minute and a
-    // half before it slowly turns. The sky texture reaches past the picture far enough for all of it.
-    wind: (calm ? 0.5 : 1) * 0.09 * Math.sin((TAU * t) / 195),
+    // The wind carries the high clouds one way only, never back: from the first frame at its
+    // fastest, about 4 px a second on a laptop, dying away slowly (half its speed after 21 seconds,
+    // a tenth after 71) as they travel 9% of the picture's width. The sky texture reaches past the
+    // picture far enough for all of it (data-sky-reach, 10%).
+    wind: (calm ? 0.5 : 1) * 0.09 * (1 - Math.exp(-t / 31)),
   };
 }
 
@@ -357,12 +358,26 @@ export async function start(root: HTMLElement): Promise<Stop | null> {
   document.addEventListener('visibilitychange', run);
   run();
 
-  return () => {
+  const halt = () => {
     cancelAnimationFrame(frame);
     resize.disconnect();
     seen.disconnect();
     document.removeEventListener('visibilitychange', run);
     removeEventListener('pointermove', lean);
+  };
+  // If the browser takes the context away (a GPU reset, memory pressure), the still picture is the
+  // whole picture again, as when WebGL is unavailable.
+  canvas.addEventListener(
+    'webglcontextlost',
+    () => {
+      halt();
+      delete canvas.dataset.on;
+    },
+    { once: true },
+  );
+
+  return () => {
+    halt();
     gl.getExtension('WEBGL_lose_context')?.loseContext();
   };
 }

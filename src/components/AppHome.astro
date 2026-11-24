@@ -1,0 +1,55 @@
+---
+// What stands on the GlassPhone's screen: the neoQuad home screen, drawn in the glass as hairlines
+// and quiet white type. Every part is the app's own (the iOS source, and its render in
+// src/assets/app/screen-events.png), at its own size on a 402 pt wide screen:
+//   app/HomeMap      the campus outline with the demo campus's event pins on their spots
+//   app/MapControls  the control capsule, top right, in its outline tone
+//   app/HomeSheet    the Events sheet at its resting height: Happening Now, then the tab bar
+// The map and the sheet read one demo campus (app/sample.ts), so the pins and Happening Now agree.
+// What they share is set here: the point (1 pt = 0.2488cqw of the phone), the status bar's height
+// and the engraving's inks. No colour: the brand's blue stays off the first screen; the only
+// colour is the events' own pictures. It is decoration; the phone is aria-hidden.
+import HomeMap from './app/HomeMap.astro';
+import MapControls from './app/MapControls.astro';
+import HomeSheet from './app/HomeSheet.astro';
+---
+
+<div class="app">
+  <HomeMap />
+  <MapControls tone="outline" />
+  <HomeSheet />
+</div>
+
+<style>
+  .app {
+    --pt: 0.2488cqw;
+    /* The status bar on an iPhone 16 Pro: where the map's safe area starts. */
+    --safe-top: calc(62 * var(--pt));
+    /* A hairline: one device pixel's worth on a small phone, a little more on a large one. */
+    --hair: max(1px, calc(0.6 * var(--pt)));
+    --ink: rgba(255, 255, 255, 0.94);
+    --ink-2: rgba(255, 255, 255, 0.64);
+    --rule: rgba(255, 255, 255, 0.3);
+    --rule-strong: rgba(255, 255, 255, 0.6);
+    /* Where the app has a glass surface: the sheet, its card, the controls. */
+    --tint: rgba(255, 255, 255, 0.07);
+
+    position: absolute;
+    inset: 0;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, var(--sans);
+    text-shadow: 0 calc(1 * var(--pt)) calc(6 * var(--pt)) rgba(20, 16, 30, 0.2);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @keyframes controls-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  :global(html[data-enter]) .app > :global(.controls) {
+    animation: controls-in 900ms var(--ease-out) backwards;
+    animation-delay: var(--t0, 1200ms);
+  }
+</style>

@@ -1,0 +1,52 @@
+---
+// Find My's control capsule over the map, top right (neoQuad-ios 5d968ad, Features/Map/CampusMap.swift,
+// controls): Map Modes and Show Campus, each 44 pt square, their symbols at 18 pt, in one glass
+// capsule 14 pt in from the edge and 6 pt below the top of the map's safe area, which the scene
+// gives as --safe-top (the status bar on a whole screen).
+// Two tones, as EventPin has them: "colour" is the app's glass in dark mode (white at 10%, blurred,
+// a 0.5 pt rim); "outline" is the hero's engraving, in its scene's inks (--tint, --rule, --hair).
+// It does not move by itself; a scene that brings it in animates .controls, and the glass keeps its
+// blur only if nothing around it is fading at the time.
+import Symbol from '../Symbol.astro';
+
+interface Props {
+  tone: 'colour' | 'outline';
+}
+const { tone } = Astro.props;
+---
+
+<div class:list={['controls', `controls--${tone}`]}>
+  <span><Symbol name="map.fill" /></span>
+  <span><Symbol name="location" /></span>
+</div>
+
+<style>
+  .controls {
+    position: absolute;
+    top: calc(var(--safe-top, 0px) + 6 * var(--pt));
+    right: calc(14 * var(--pt));
+    display: grid;
+    border-radius: 999px;
+    font-size: calc(18 * var(--pt));
+  }
+
+  .controls span {
+    display: grid;
+    place-items: center;
+    width: calc(44 * var(--pt));
+    height: calc(44 * var(--pt));
+  }
+
+  .controls--colour {
+    background: rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(calc(10 * var(--pt))) saturate(1.6);
+    backdrop-filter: blur(calc(10 * var(--pt))) saturate(1.6);
+    box-shadow: inset 0 0 0 calc(0.5 * var(--pt)) rgba(255, 255, 255, 0.14);
+  }
+
+  .controls--outline {
+    background: var(--tint);
+    box-shadow: inset 0 0 0 var(--hair) var(--rule);
+    color: var(--ink);
+  }
+</style>

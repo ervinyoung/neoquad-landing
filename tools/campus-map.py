@@ -1,18 +1,22 @@
-"""Draw the SBCC campus as an outline for the phone on the Students hero (read by AppWireframe.astro).
+"""Draw SBCC in hairlines for every map on the site, from one fetch, in one run.
 
     python3 tools/campus-map.py [path/to/SBCCBuildings.swift]
 
-Sources : the app's places, Features/Map/SBCCBuildings.swift in the iOS repo (where each pin sits)
+Sources : the app's places, neoQuad/Backend/Data/SBCCBuildings.swift in the iOS repo at the commit
+          the site is drawn from (tools/app_source.py), or the file given
           OpenStreetMap, through the Overpass API (building footprints, walkways, streets, the
           coastline and bluff). The app's places are themselves interior points of these OSM
-          footprints (see the header of SBCCBuildings.swift), so the pins and the outline agree.
+          footprints (see the header of SBCCBuildings.swift), so the places and the outline agree.
           Map data (c) OpenStreetMap contributors, ODbL.
-Output  : src/data/campus-map.json  paths in the phone's own box (100 wide, cqw), north up as the app's
-          campus camera is (heading 0), and where each pin's place lands in that box.
+Output  : one JSON file per view in VIEWS: paths in the view's own box (100 wide, so one unit is a
+          cqw of whatever shows it), north up as the app's campus camera is (heading 0), and the
+          view's frame, from which src/components/app/map.ts puts any coordinate (an event's pin)
+          on it. Each view is a frame only: the drawing is the same everywhere, so maps never
+          disagree.
 
 Only campus is kept: footprints and walkways within reach of one of the app's places, the streets
 that bound it (Cliff Drive, Loma Alta, Shoreline), and the shore. Lines are simplified to under two
-metres and written as relative moves, so the file stays small.
+metres at the hero's scale and written as relative moves, so the files stay small.
 """
 import json
 import math
@@ -22,21 +26,28 @@ import subprocess
 import sys
 import time
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SWIFT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
-    ROOT, '..', '07 Code Snapshots', 'neoQuad-ios-main', 'Features', 'Map', 'SBCCBuildings.swift')
-OUT = os.path.join(ROOT, 'src', 'data', 'campus-map.json')
+import app_source
 
-# The phone's box: 100 wide, as tall as an iPhone 16 Pro is for that width (GlassPhone's aspect).
-BOX_W, BOX_H = 100, 100 * 1496 / 715
-# Where campus sits in it, and how big: this point lands at (CENTRE_X, CENTRE_Y), and METRES_PER_UNIT
-# metres fill one unit (one cqw). The app's places are framed between the app icon and the hero's cut.
-CENTRE = (34.40525, -119.69850)
-CENTRE_X, CENTRE_Y = 50, 94
-METRES_PER_UNIT = 8.6
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PLACES = 'neoQuad/Backend/Data/SBCCBuildings.swift'
+DATA = os.path.join(ROOT, 'src', 'data')
+
+# The views. Each is a box 100 wide and `height` tall; `centre` lands at (x, y) in it, and
+# `metres` metres fill one unit (one cqw of what shows it).
+VIEWS = {
+    # The phone on the Students hero (app/HomeMap), and the dashboard's map tile on /schools
+    # (DashboardOutline), which shows a band of it. As tall as an iPhone 16 Pro is for its width
+    # (GlassPhone's aspect); campus framed as the app frames it at launch, in the map left between
+    # the status bar and the Events sheet at its resting height (its top is 113.5 units down):
+    # fitted to the pins in the app's render (src/assets/app/screen-events.png), within half a unit.
+    'campus-map': {'height': 100 * 1496 / 715, 'centre': (34.40525, -119.69850), 'x': 50.2, 'y': 67.7, 'metres': 9.65},
+    # The map in How it works (how/MapScene): a 340 x 400 pt piece of the app's map at one metre to
+    # the point, Friendship Plaza (SBCCBuildings.swift, FriendshipPlaza) a little below the middle.
+    'campus-plaza': {'height': 100 * 400 / 340, 'centre': (34.406211, -119.697185), 'x': 50, 'y': 100 * 400 / 340 * 0.55,
+                     'metres': 340 / 100},
+}
 REACH = 110       # metres from one of the app's places that still counts as campus
-TOLERANCE = 0.2   # simplification, in units (under two metres)
-PINS = {'Overlook': 'CalderOverlook', 'Pride': 'PrideCenter', 'Garden': 'PermacultureGarden'}
+TOLERANCE = 0.2   # simplification, in each view's units (about two metres on the hero's)
 
 BBOX = '34.3990,-119.7070,34.4110,-119.6910'
 QUERY = f"""[out:json][timeout:60];(
@@ -46,20 +57,40 @@ way["natural"~"coastline|cliff"]({BBOX});
 );out geom;"""
 
 
-def places(path):
+def places():
+    """The app's places: the file given on the command line, else SBCCBuildings.swift at the site's commit."""
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as f:
+            text = f.read()
+    else:
+        text = app_source.read(PLACES).decode()
     pattern = re.compile(r'Building\(id: "([^"]+)".*?latitude: ([\d.-]+), longitude: ([\d.-]+)')
-    with open(path) as f:
-        return {m[1]: (float(m[2]), float(m[3])) for m in pattern.finditer(f.read())}
+    return {m[1]: (float(m[2]), float(m[3])) for m in pattern.finditer(text)}
 
 
-def project(lat, lon):
-    x = (lon - CENTRE[1]) * 111320 * math.cos(math.radians(CENTRE[0])) / METRES_PER_UNIT + CENTRE_X
-    y = (CENTRE[0] - lat) * 110574 / METRES_PER_UNIT + CENTRE_Y
-    return x, y
+class View:
+    """A frame on campus: where a coordinate lands in the box. src/components/app/map.ts does the
+    same sum from the frame written out, so a pin and the outline under it always agree."""
 
+    def __init__(self, name, height, centre, x, y, metres):
+        self.name, self.width, self.height = name, 100, height
+        self.centre, self.x, self.y, self.metres = centre, x, y, metres
 
-def metres(a, b):
-    return math.hypot((a[0] - b[0]) * 110574, (a[1] - b[1]) * 111320 * math.cos(math.radians(CENTRE[0])))
+    def project(self, lat, lon):
+        x = (lon - self.centre[1]) * 111320 * math.cos(math.radians(self.centre[0])) / self.metres + self.x
+        y = (self.centre[0] - lat) * 110574 / self.metres + self.y
+        return x, y
+
+    def distance(self, a, b):
+        """Metres between two coordinates."""
+        return math.hypot((a[0] - b[0]) * 110574, (a[1] - b[1]) * 111320 * math.cos(math.radians(self.centre[0])))
+
+    def inside(self, p, margin=4):
+        return -margin <= p[0] <= self.width + margin and -margin <= p[1] <= self.height + margin
+
+    def frame(self):
+        return {'lat': self.centre[0], 'lng': self.centre[1], 'x': round(self.x, 4), 'y': round(self.y, 4),
+                'metres': round(self.metres, 4)}
 
 
 def simplify(points, tol):
@@ -81,10 +112,6 @@ def simplify(points, tol):
 
 def area(points):
     return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(points, points[1:] + points[:1]))) / 2
-
-
-def inside(p, margin=4):
-    return -margin <= p[0] <= BOX_W + margin and -margin <= p[1] <= BOX_H + margin
 
 
 def path(points, closed):
@@ -122,17 +149,15 @@ def fetch():
     sys.exit('Overpass did not answer; try again later.')
 
 
-def main():
-    spots = places(SWIFT)
-    ways = fetch()['elements']
-
+def draw(view, ways, spots):
+    """The outline in this view's box, layer by layer. Thresholds are in the view's own units."""
     layers = {'buildings': [], 'walks': [], 'streets': [], 'shore': []}
     for way in ways:
         tags, geometry = way.get('tags', {}), way.get('geometry', [])
         if len(geometry) < 2:
             continue
         coords = [(g['lat'], g['lon']) for g in geometry]
-        near = min(metres(c, s) for c in coords[:: max(1, len(coords) // 6)] for s in spots.values())
+        near = min(view.distance(c, s) for c in coords[:: max(1, len(coords) // 6)] for s in spots.values())
         if 'building' in tags:
             layer, closed, keep = 'buildings', True, near < REACH
         elif tags.get('natural') in ('coastline', 'cliff'):
@@ -143,41 +168,45 @@ def main():
             layer, closed, keep = 'walks', False, near < REACH
         if not keep:
             continue
-        projected = [project(*c) for c in coords]
+        projected = [view.project(*c) for c in coords]
         if closed:  # a ring starts where it ends, so simplify it as two halves
             half = len(projected) // 2
             points = simplify(projected[: half + 1], TOLERANCE)[:-1] + simplify(projected[half:], TOLERANCE)
         else:
             points = simplify(projected, TOLERANCE * 2)
-        if not closed:  # trim the parts of a line that run off the pane
-            keep_from = next((i for i, p in enumerate(points) if inside(p)), None)
+        if not closed:  # trim the parts of a line that run off the box
+            keep_from = next((i for i, p in enumerate(points) if view.inside(p)), None)
             if keep_from is None:
                 continue
-            keep_to = len(points) - next(i for i, p in enumerate(reversed(points)) if inside(p))
+            keep_to = len(points) - next(i for i, p in enumerate(reversed(points)) if view.inside(p))
             points = points[max(0, keep_from - 1): keep_to + 1]
-        elif not any(inside(p) for p in points) or area(points) < 2:  # off the pane, or a shed
+        elif not any(view.inside(p) for p in points) or area(points) < 2:  # off the box, or a shed
             continue
         if layer == 'walks' and sum(math.dist(a, b) for a, b in zip(points, points[1:])) < 4:
             continue
         layers[layer].append(path(points, closed))
+    return layers
 
-    pins = {}
-    for photo, place in PINS.items():
-        x, y = project(*spots[place])
-        pins[photo] = {'place': place, 'x': round(x / BOX_W * 100, 2), 'y': round(y / BOX_H * 100, 2)}
 
-    out = {
-        'source': 'SBCCBuildings.swift (neoQuad iOS) for the places; OpenStreetMap contributors (ODbL) for the outline',
-        'width': BOX_W,
-        'height': round(BOX_H, 2),
-        **{name: ''.join(ds) for name, ds in layers.items()},
-        'pins': pins,
-    }
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, 'w') as f:
-        json.dump(out, f, separators=(',', ':'))
-    counts = ', '.join(f'{name} {len(ds)}' for name, ds in layers.items())
-    print(f'{OUT}: {os.path.getsize(OUT)} bytes ({counts}); pins {pins}')
+def main():
+    spots = places()
+    ways = fetch()['elements']
+    os.makedirs(DATA, exist_ok=True)
+    for name, spec in VIEWS.items():
+        view = View(name, spec['height'], spec['centre'], spec['x'], spec['y'], spec['metres'])
+        layers = draw(view, ways, spots)
+        out = {
+            'source': 'SBCCBuildings.swift (neoQuad iOS) for the places; OpenStreetMap contributors (ODbL) for the outline',
+            'width': view.width,
+            'height': round(view.height, 2),
+            'frame': view.frame(),
+            **{layer: ''.join(ds) for layer, ds in layers.items()},
+        }
+        target = os.path.join(DATA, f'{name}.json')
+        with open(target, 'w') as f:
+            json.dump(out, f, separators=(',', ':'))
+        counts = ', '.join(f'{layer} {len(ds)}' for layer, ds in layers.items())
+        print(f'{os.path.relpath(target, ROOT)}: {os.path.getsize(target)} bytes ({counts})')
 
 
 if __name__ == '__main__':

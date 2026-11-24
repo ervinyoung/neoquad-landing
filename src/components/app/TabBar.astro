@@ -1,0 +1,63 @@
+---
+// The tab bar at the foot of the sheet (neoQuad-ios 5d968ad, App/RootView.swift: Events, Places, Orgs, Me, in their fill
+// variants). It is the system's floating bar, so its size is measured from the app's render
+// (src/assets/app/screen-events.png): a 58 pt capsule 23 pt in from the sheet's sides and 14 pt
+// above its foot, the selected tab a 52 pt capsule inside it, symbols at 22 pt, labels 10 pt.
+import Symbol from '../Symbol.astro';
+import type { SymbolName } from '../../icons/symbols';
+
+const tabs: { title: string; symbol: SymbolName }[] = [
+  { title: 'Events', symbol: 'calendar' },
+  { title: 'Places', symbol: 'building.2.fill' },
+  { title: 'Orgs', symbol: 'person.3.fill' },
+  { title: 'Me', symbol: 'person.crop.circle.fill' },
+];
+---
+
+<nav class="tabs">
+  {
+    tabs.map((tab, i) => (
+      <span class:list={['tab', i === 0 && 'is-on']}>
+        <Symbol name={tab.symbol} />
+        {tab.title}
+      </span>
+    ))
+  }
+</nav>
+
+<style>
+  .tabs {
+    position: absolute;
+    left: calc(23 * var(--pt));
+    right: calc(23 * var(--pt));
+    bottom: calc(14 * var(--pt));
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: calc(58 * var(--pt));
+    padding: calc(3 * var(--pt));
+    border-radius: 999px;
+    background: var(--tint);
+    box-shadow: inset 0 0 0 var(--hair) var(--rule);
+  }
+
+  .tab {
+    display: grid;
+    grid-template-rows: calc(26 * var(--pt)) auto;
+    place-items: center;
+    align-content: center;
+    gap: calc(2 * var(--pt));
+    border-radius: 999px;
+    font-size: calc(10 * var(--pt));
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+
+  .tab :global(.symbol) {
+    font-size: calc(22 * var(--pt));
+  }
+
+  .tab.is-on {
+    background: var(--tint);
+    color: var(--ink);
+  }
+</style>

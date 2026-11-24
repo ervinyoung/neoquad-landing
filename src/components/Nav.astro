@@ -73,15 +73,20 @@ const { audience } = Astro.props;
   };
 
   // The glass takes its tone from what is under it: dark ink over light sections, light ink over
-  // photographs and black. One sample per frame at the centre of the bar, only while scrolling.
+  // photographs and black. One reading per frame at the bar's middle line, only while scrolling.
+  // It is read from the sections' boxes, not by hit-testing, so it holds while a page switch plays.
   let sampling = false;
   const readUnder = () => {
     sampling = false;
     const nav = document.querySelector<HTMLElement>('.nav');
     if (!nav) return;
     const box = nav.getBoundingClientRect();
-    const under = document.elementsFromPoint(innerWidth / 2, box.top + box.height / 2).find((el) => !nav.contains(el));
-    nav.dataset.over = under?.closest('.section--white, .section--mist') ? 'light' : 'dark';
+    const y = box.top + box.height / 2;
+    const light = [...document.querySelectorAll('.section--white, .section--mist')].some((section) => {
+      const { top, bottom } = section.getBoundingClientRect();
+      return top <= y && bottom > y;
+    });
+    nav.dataset.over = light ? 'light' : 'dark';
   };
   const sampleUnder = () => {
     if (sampling) return;
@@ -92,14 +97,14 @@ const { audience } = Astro.props;
   addEventListener('resize', sampleUnder, { passive: true });
 
   // The pill starts moving the moment a switch begins, not when the new page lands.
-  document.addEventListener('astro:before-preparation', (event) => {
-    setAudience(event.to.pathname);
-    document.querySelector('.nav')?.setAttribute('data-first-screen', '');
-  });
-  // While a page switch plays, everything hit-tests as the page root, so the bar reads again once
-  // the transition has finished (a restored scroll position may have put it over a light section).
-  document.addEventListener('astro:before-swap', (event) => {
-    event.viewTransition.finished.then(readUnder, readUnder);
+  document.addEventListener('astro:before-preparation', (event) => setAudience(event.to.pathname));
+  // The action turns clear with the new page, not before it: the old one may still be showing a
+  // light section, where clear glass would leave white words on white.
+  document.addEventListener('astro:after-swap', () => {
+    const nav = document.querySelector<HTMLElement>('.nav');
+    if (!nav) return;
+    nav.toggleAttribute('data-first-screen', !!document.querySelector('.hero') && scrollY < innerHeight);
+    readUnder();
   });
   document.addEventListener('astro:page-load', () => {
     setAudience(location.pathname);
@@ -154,9 +159,10 @@ const { audience } = Astro.props;
     transition: opacity 320ms ease;
   }
 
-  /* Over photographs and black: clear glass with a breath of shade, so white ink always holds. */
+  /* Over photographs and black: clear glass with a breath of shade, so white ink always holds,
+     4.5:1 even over the brightest dusk sky. */
   .nav::before {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03)), rgba(18, 18, 22, 0.3);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)), rgba(18, 18, 22, 0.45);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.34),
       inset 0 0 0 1px rgba(255, 255, 255, 0.1),
@@ -247,7 +253,7 @@ const { audience } = Astro.props;
 
   .switch a {
     border-radius: 999px;
-    color: color-mix(in srgb, var(--ink) 72%, transparent);
+    color: color-mix(in srgb, var(--ink) 92%, transparent);
     -webkit-touch-callout: none;
     transition: color 320ms ease;
   }
@@ -308,10 +314,11 @@ const { audience } = Astro.props;
     align-items: center;
     min-height: var(--control);
     padding: 0 14px;
+    border-radius: 999px;
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
-    color: color-mix(in srgb, var(--ink) 66%, transparent);
+    color: color-mix(in srgb, var(--ink) 88%, transparent);
     user-select: none;
     -webkit-user-select: none;
     transition: color 320ms ease;
@@ -344,6 +351,25 @@ const { audience } = Astro.props;
   .nav[data-audience='students'] .nav-action--students,
   .nav[data-audience='schools'] .nav-action--schools {
     display: flex;
+  }
+
+  /* On phones the action is wider than the mark, and a switch centred on the bar would run into
+     it. The switch centres in the room between them instead. */
+  @media (max-width: 399px) {
+    .nav {
+      grid-template-columns: auto 1fr auto;
+      column-gap: 4px;
+    }
+
+    .switch {
+      justify-self: center;
+    }
+
+    /* Narrows with the room, and meets the wider bar's padding (4vw) at 400 px without a step. */
+    .switch a,
+    .switch-pill span {
+      padding: 0 clamp(11px, 9.4vw - 21.6px, 16px);
+    }
   }
 
   /* The smallest phones: everything a little closer, nothing dropped. */

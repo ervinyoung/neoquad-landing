@@ -39,4 +39,10 @@ import GlassPane from './GlassPane.astro';
     position: absolute;
     inset: 0;
   }
+
+  /* The island and the screen fade with the pane (--presence, see GlassPane). */
+  .phone-island,
+  .phone-screen {
+    opacity: var(--presence);
+  }
 </style>

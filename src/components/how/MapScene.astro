@@ -1,0 +1,109 @@
+---
+// It goes live on the map: the campus map around Friendship Plaza (neoQuad-ios 5d968ad,
+// Features/Map/CampusMap.swift) at the story's moment (how/story.ts), where Club Rush arrives and is
+// selected among the demo campus's other events on their places (app/sample.ts):
+//   Club Rush          Friendship Plaza   its picture, free food later on
+//   FAFSA & Dream Act Workshop, UC Personal Insight Questions, Accommodations 101
+//                      Student Services   academic, three on one spot
+//   Speaker: Life as an ER Nurse
+//                      Earth & Bio Sci    career
+//   Photography Club Meeting
+//                      Humanities         club meeting
+// Each is the app's own pin (app/EventPin) in its colours. Under them, the campus as OpenStreetMap
+// draws it (tools/campus-map.py, src/data/campus-plaza.json), one metre to the point, north up. The
+// map's own look is MapKit's, so it is drawn quietly here. Top right, the control capsule
+// (app/MapControls).
+import map from '../../data/campus-plaza.json';
+import EventPin from '../app/EventPin.astro';
+import MapControls from '../app/MapControls.astro';
+import { onMap } from '../app/map';
+import { pinOf } from '../app/pin';
+import { event } from '../app/sample';
+import { clubRush, moment } from './story';
+
+const at = (ids: string[]) => {
+  const pin = pinOf(ids.map(event), moment);
+  return { pin, at: onMap(map, pin) };
+};
+const others = [['photo_meeting_0'], ['fafsa_workshop', 'uc_piq', 'accommodations_101'], ['er_nurse_talk']].map(at);
+const club = at([clubRush.id]);
+// Pins draw south over north, as the app sorts them.
+const pins = [...others.map((o) => ({ ...o, arrives: false })), { ...club, arrives: true }].sort((a, b) => b.pin.lat - a.pin.lat);
+---
+
+<div class="map">
+  <svg class="ground" viewBox={`0 0 ${map.width} ${map.height}`} preserveAspectRatio="xMidYMid slice">
+    <path class="streets" d={map.streets} />
+    <path class="walks" d={map.walks} />
+    <path class="buildings" d={map.buildings} />
+  </svg>
+
+  {pins.map(({ pin, at, arrives }) => <EventPin tone="colour" pin={pin} at={at} placed={arrives} selected={arrives} />)}
+
+  <MapControls tone="colour" />
+</div>
+
+<style>
+  .map {
+    position: absolute;
+    inset: 0;
+    background: var(--app-map);
+    /* The map's safe area starts at the scene's top. Club Rush is placed, then selected once it
+       has landed. */
+    --safe-top: calc(8 * var(--pt));
+    --select: calc(var(--t) + 620ms);
+  }
+
+  .ground {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ground path {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .streets {
+    stroke: rgba(255, 255, 255, 0.16);
+    stroke-width: calc(7 * var(--pt));
+  }
+
+  .walks {
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: calc(2 * var(--pt));
+  }
+
+  .buildings {
+    fill: rgba(255, 255, 255, 0.07);
+    stroke: rgba(255, 255, 255, 0.16);
+    stroke-width: calc(1 * var(--pt));
+  }
+
+  /* Glass loses its blur while an ancestor fades, so the capsule waits for the scene's own reveal
+     to finish and then fades in by itself. */
+  .map > :global(.controls) {
+    transition: opacity 400ms var(--ease-out) 820ms;
+  }
+
+  :global(html.js) .map > :global(.controls) {
+    opacity: 0;
+  }
+
+  :global(html.js .is-in) .map > :global(.controls) {
+    opacity: 1;
+  }
+
+  /* Club Rush waits for the scene to come into view. */
+  :global(html.js) .map {
+    --pin-play: paused;
+  }
+
+  :global(html.js .is-in) .map {
+    --pin-play: running;
+  }
+</style>

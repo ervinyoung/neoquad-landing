@@ -2,19 +2,25 @@
 
     python3 tools/frame-screens.py
 
-Sources  : the dark-mode screens used in the brand deck (docs/screenshots in the iOS repo).
+Sources  : the dark-mode screens used in the brand deck: docs/screenshots in the iOS repo, at the
+           commit the site is drawn from (tools/app_source.py).
 Frame    : cut from the mockup the old landing page used (legacy/assets/screen-home.png).
 Output   : src/assets/app/*.png, one framed phone per screen, transparent outside the phone.
 """
-import math, os, sys
+import io, math, os, sys
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
+import app_source
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCES = os.path.join(ROOT, '..', '07 Code Snapshots', 'neoQuad-ios-REFRESH (old working copy, Oct 19)', 'docs', 'screenshots')
 FRAME = os.path.join(ROOT, 'legacy', 'assets', 'screen-home.png')
 OUT = os.path.join(ROOT, 'src', 'assets', 'app')
 FONT = '/Library/Fonts/SF-Pro-Text-Semibold.otf'
 SCREENS = {'01-events': 'events', '02-places': 'places', '03-event': 'event', '04-live': 'live'}
+
+
+def source(name):
+    """One of the deck's screens, from the app at the site's commit."""
+    return Image.open(io.BytesIO(app_source.read(f'docs/screenshots/{name}.jpg'))).convert('RGB')
 SS = 3            # supersampling for masks
 BEZEL = 21.5      # px from the outer edge of the body to the glass, measured on the frame
 DEBUG = '--debug' in sys.argv
@@ -120,11 +126,11 @@ def main():
     gw, gh = gx1 - gx0, gy1 - gy0
     print('frame', shell.size, 'glass', (gx0, gy0, gx1, gy1), 'ratio %.4f' % (gh / gw))
     global CLOCK
-    ref = Image.open(os.path.join(SOURCES, '03-event.jpg')).convert('RGB')
+    ref = source('03-event')
     CLOCK = find_clock(ref.resize((gw, gh), Image.LANCZOS, box=screen_rect(ref)))
     print('clock', tuple(round(v, 4) for v in CLOCK))
     for src, name in SCREENS.items():
-        im = Image.open(os.path.join(SOURCES, src + '.jpg')).convert('RGB')
+        im = source(src)
         rect = screen_rect(im)
         print(' ', src, im.size, 'glass', tuple(round(v, 1) for v in rect), 'ratio %.4f' % ((rect[3] - rect[1]) / (rect[2] - rect[0])))
         screen = im.resize((gw, gh), Image.LANCZOS, box=rect)

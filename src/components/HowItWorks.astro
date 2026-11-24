@@ -1,102 +1,31 @@
 ---
-// How neoQuad works, as one strip of the coast seen through glass: a club posts an event, it goes
-// live on the map, you walk over. On wide screens the three scenes join into one window and play
-// left to right as it comes into view; on phones each scene is its own window and plays as it is
-// reached. The pictures are aria-hidden; the ordered list of lines carries the meaning.
-import { getImage } from 'astro:assets';
-import dusk from '../assets/photos/dusk-blur.jpg';
-import Symbol from './Symbol.astro';
+// How neoQuad works, as one event followed through the app: Student Life posts Club Rush, it lands
+// on the campus map, and a student who is going is told to walk over. Each picture is a piece of the
+// real app (neoQuad-ios at 5d968ad, the build the App Store screenshots come from; see tools/app_source.py), drawn at its own
+// point sizes in a 340 x 400 pt scene; the parts and their sources are listed in each scene.
+// The scenes play once as they come into view, left to right where they stand side by side.
+// The pictures are aria-hidden; the ordered list of lines carries the meaning.
+import NewEvent from './how/NewEvent.astro';
+import MapScene from './how/MapScene.astro';
+import EventPage from './how/EventPage.astro';
 
-const photo = await getImage({ src: dusk, width: 1600, format: 'webp' });
-
-// The walk: footsteps from you to the event, along a curve (percentages of the scene).
-const from = { x: 26, y: 58 };
-const bend = { x: 28, y: 27 };
-const to = { x: 68, y: 30 };
-const steps = Array.from({ length: 8 }, (_, i) => {
-  const t = 0.13 + (i / 7) * 0.74;
-  const u = 1 - t;
-  return {
-    x: u * u * from.x + 2 * u * t * bend.x + t * t * to.x,
-    y: u * u * from.y + 2 * u * t * bend.y + t * t * to.y,
-  };
-});
-
-const lines = ['A club posts it.', 'It goes live on the map.', 'You walk over.'];
+const steps = [
+  { line: 'A club posts it.', Scene: NewEvent },
+  { line: 'It goes live on the map.', Scene: MapScene },
+  { line: 'You walk over.', Scene: EventPage },
+];
 ---
 
 <section class="section section--mist how">
   <div class="wrap">
     <h2 class="line line--section" data-reveal>From the post <i>to the place.</i></h2>
 
-    <ol class="flow" style={`--photo:url(${photo.src})`}>
+    <ol class="rail steps">
       {
-        lines.map((line, i) => (
-          <li class="step" data-reveal style={`--step:${i}`}>
-            <div class:list={['scene', `scene--${i + 1}`]} aria-hidden="true">
-              <svg class="streets" viewBox={`${i * 100} 0 100 100`} preserveAspectRatio="none">
-                <path d="M-10 38C30 30 50 12 92 18s70 30 110 22 60-26 108-20" />
-                <path d="M-10 78c40-6 64 8 104 2s58-22 100-16 64 20 116 12" />
-                <path d="M44-10c-6 30 10 48 4 70s-12 30-8 50" />
-                <path d="M150-10c4 26-8 44-2 64s14 34 10 56" />
-                <path d="M246-10c-4 30 8 46 2 68s-10 30-6 52" />
-              </svg>
-
-              {i === 0 && (
-                <div class="card">
-                  <b>Club Rush</b>
-                  <small>Friendship Plaza · Until 11:30</small>
-                  <span class="card-foot">
-                    <span class="food">
-                      <Symbol name="fork.knife" />
-                      Free food
-                    </span>
-                    <span class="post">Post</span>
-                  </span>
-                </div>
-              )}
-
-              {i === 1 && (
-                <>
-                  <span class="pin pin--quiet" style="left:22%;top:34%">
-                    <span class="pin-body">
-                      <Symbol name="graduationcap.fill" />
-                    </span>
-                  </span>
-                  <span class="pin pin--quiet" style="left:80%;top:72%">
-                    <span class="pin-body">
-                      <Symbol name="paintpalette.fill" />
-                    </span>
-                  </span>
-                  <span class="pin pin--live" style="left:52%;top:58%">
-                    <span class="ring" />
-                    <span class="pin-body">
-                      <Symbol name="person.3.fill" />
-                    </span>
-                    <em>Live</em>
-                  </span>
-                </>
-              )}
-
-              {i === 2 && (
-                <>
-                  <span class="pin pin--live pin--small" style={`left:${to.x}%;top:${to.y}%`}>
-                    <span class="pin-body">
-                      <Symbol name="person.3.fill" />
-                    </span>
-                  </span>
-                  {steps.map((s, n) => (
-                    <span class="footstep" style={`left:${s.x}%;top:${s.y}%;--n:${n}`} />
-                  ))}
-                  <span class="you" style={`left:${from.x}%;top:${from.y}%`} />
-                  <span class="slide">
-                    <span class="slide-label">slide to go</span>
-                    <span class="knob">
-                      <Symbol name="figure.walk" />
-                    </span>
-                  </span>
-                </>
-              )}
+        steps.map(({ line, Scene }, i) => (
+          <li class="step" data-reveal style={`--i:${i};--step:${i}`}>
+            <div class="scene" aria-hidden="true">
+              <Scene />
             </div>
             <p class="line line--small">{line}</p>
           </li>
@@ -111,453 +40,68 @@ const lines = ['A club posts it.', 'It goes live on the map.', 'You walk over.']
     max-width: 12em;
   }
 
-  /* ---------- The strip ---------- */
+  /* ---------- Layout ----------
+     Each line stands under its own picture, so they can never drift apart. The three are a rail
+     (global.css): they scroll sideways and snap below 900px, and from there stand in a row and play
+     in turn, a beat apart. Each line is one line, the three a set: the type steps down where a
+     column is too narrow for the longest ("It goes live on the map." is 10.4 em wide). */
 
-  .flow {
-    /* The time between scenes when they play as one strip. Stacked, each plays on its own. */
+  .steps {
     --beat: 0ms;
-    display: grid;
-    gap: clamp(48px, 9vw, 72px);
-    margin-top: clamp(56px, 8vw, 112px);
   }
 
-  /* The coast at dusk, under a breath of shade so white glass holds. Stacked, each scene shows
-     its own part of it (--px); joined, the strip shows all of it. */
-  .flow,
-  .scene {
-    --coast:
-      linear-gradient(180deg, rgba(12, 20, 48, 0.08), rgba(12, 20, 48, 0.28)),
-      var(--photo) var(--px, 50%) 50% / cover no-repeat,
-      var(--graphite);
+  .step {
+    --t: calc(300ms + var(--step) * var(--beat));
+    container-type: inline-size;
   }
 
   .step > .line {
     margin-top: 28px;
-    padding-inline-end: 1em;
+    font-size: min(var(--line-small), 100cqi / 11.2);
   }
 
+  @media (min-width: 900px) {
+    .steps {
+      --beat: 850ms;
+    }
+  }
+
+  /* ---------- The scene ----------
+     A piece of the app's screen, 340 pt wide and 400 pt tall, in dark mode as the app always is.
+     1 pt is a 340th of the scene, so every size below is the app's own number of points. */
+
   .scene {
-    /* A unit that follows the scene's width but stops growing, so the glass keeps phone proportions. */
-    --u: min(1.12cqw, 5.2px);
-    --r: calc(var(--window-radius) * var(--corner-reach));
+    --pt: calc(100cqw / 340);
+
+    /* iOS dark mode, as the app draws on it */
+    --app-label: #ffffff;
+    --app-label-2: rgba(235, 235, 245, 0.6);
+    --app-separator: rgba(84, 84, 88, 0.6);
+    --app-fill: rgba(120, 120, 128, 0.36);
+    --app-sheet: #1c1c1e;
+    --app-sheet-grouped: #1c1c1e;
+    --app-cell: #2c2c2e;
+    --app-glass: rgba(255, 255, 255, 0.1);
+    --app-map: #232325;
+    --app-orange: #ff9f0a;
+    /* The app's palette (Design/Palette.swift, Theme.swift): Coastal on dark, Live text on dark,
+       and the card fill on dark (white at 7%). */
+    --app-coastal: #2d86ec;
+    --app-live: #30d158;
+    --app-card: rgba(255, 255, 255, 0.07);
 
     position: relative;
     container-type: inline-size;
     overflow: hidden;
-    aspect-ratio: 4 / 3;
-    border-radius: var(--r);
+    aspect-ratio: 340 / 400;
+    border-radius: calc(var(--window-radius) * var(--corner-reach));
     corner-shape: var(--corner);
-    background: var(--coast);
-    color: var(--white);
-    font-family: var(--sans);
-    line-height: 1.2;
+    background: var(--app-sheet);
+    color: var(--app-label);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--sans);
+    letter-spacing: -0.01em;
     isolation: isolate;
-  }
-
-  .scene--1 {
-    --px: 8%;
-  }
-  .scene--3 {
-    --px: 92%;
-  }
-
-  /* The campus, as a map remembers it. One drawing runs through all three scenes. */
-  .streets {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    fill: none;
-    stroke-linecap: round;
-  }
-
-  .streets path {
-    stroke: rgba(255, 255, 255, 0.24);
-    stroke-width: 1.5;
-    vector-effect: non-scaling-stroke;
-  }
-
-  /* In between, each line stands beside its scene. */
-  @media (min-width: 600px) and (max-width: 899px) {
-    .step {
-      display: grid;
-      grid-template-columns: 3fr 2fr;
-      align-items: center;
-      gap: clamp(24px, 4vw, 40px);
-    }
-
-    .step > .line {
-      margin-top: 0;
-    }
-  }
-
-  /* On wide screens the scenes close up into one window, drawn once behind them, and play in turn. */
-  @media (min-width: 900px) {
-    .flow {
-      --beat: 560ms;
-      position: relative;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-    }
-
-    .flow::before {
-      content: '';
-      position: absolute;
-      inset: 0 0 auto;
-      aspect-ratio: 3 / 1.08;
-      border-radius: calc(var(--window-radius) * var(--corner-reach));
-      corner-shape: var(--corner);
-      background: var(--coast);
-    }
-
-    .scene {
-      aspect-ratio: 1 / 1.08;
-      background: none;
-    }
-
-    .scene--1 .streets {
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%);
-      mask-image: linear-gradient(90deg, transparent, #000 30%);
-    }
-  }
-
-  /* ---------- 1. A club posts it: the event, in glass, and its Post button ---------- */
-
-  .card {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: min(76%, calc(var(--u) * 74));
-    display: grid;
-    gap: calc(var(--u) * 1.4);
-    padding: calc(var(--u) * 5) calc(var(--u) * 5) calc(var(--u) * 4);
-    border-radius: calc(var(--u) * 7 * var(--corner-reach));
-    corner-shape: var(--corner);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.12));
-    -webkit-backdrop-filter: blur(14px) saturate(1.6);
-    backdrop-filter: blur(14px) saturate(1.6);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-      0 calc(var(--u) * 4) calc(var(--u) * 10) rgba(12, 20, 48, 0.2);
-    transform: translate(-50%, -50%);
-  }
-
-  .card b {
-    font-size: calc(var(--u) * 6.4);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .card small {
-    font-size: calc(var(--u) * 3.8);
-    opacity: 0.8;
-  }
-
-  .card-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: calc(var(--u) * 3);
-  }
-
-  .food {
-    display: flex;
-    align-items: center;
-    gap: calc(var(--u) * 1.4);
-    font-size: calc(var(--u) * 3.6);
-    opacity: 0.86;
-  }
-
-  .food :global(.symbol) {
-    font-size: calc(var(--u) * 3.4);
-  }
-
-  .post {
-    padding: calc(var(--u) * 2) calc(var(--u) * 5);
-    border-radius: 999px;
-    background: var(--white);
-    color: var(--graphite);
-    font-size: calc(var(--u) * 3.8);
-    font-weight: 600;
-  }
-
-  /* ---------- 2. It goes live on the map ---------- */
-
-  .pin {
-    --size: calc(var(--u) * 13);
-    position: absolute;
-    width: var(--size);
-    height: var(--size);
-    margin: calc(var(--size) * -1.18) 0 0 calc(var(--size) / -2);
-  }
-
-  .pin--small {
-    --size: calc(var(--u) * 10);
-  }
-
-  .pin-body {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.24);
-    box-shadow:
-      inset 0 0 0 calc(var(--u) * 0.6) rgba(255, 255, 255, 0.92),
-      inset 0 calc(var(--u) * 1.4) calc(var(--u) * 2) calc(var(--u) * -1) rgba(255, 255, 255, 0.7),
-      0 calc(var(--u) * 1.6) calc(var(--u) * 3.4) rgba(12, 20, 48, 0.3);
-    transform-origin: 50% 118%;
-  }
-
-  .pin-body::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: calc(100% - 1px);
-    width: calc(var(--size) * 0.24);
-    height: calc(var(--size) * 0.18);
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.92);
-    clip-path: polygon(0 0, 100% 0, 50% 100%);
-  }
-
-  .pin-body :global(.symbol) {
-    font-size: calc(var(--size) * 0.36);
-  }
-
-  .pin--quiet {
-    --size: calc(var(--u) * 10);
-    opacity: 0.6;
-  }
-
-  .pin--live .pin-body {
-    background: var(--white);
-    color: var(--graphite);
-  }
-
-  .pin em {
-    position: absolute;
-    left: 50%;
-    bottom: calc(100% + var(--u) * 2);
-    padding: calc(var(--u) * 1) calc(var(--u) * 2.6) calc(var(--u) * 1.1);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.94);
-    color: var(--graphite);
-    font-size: calc(var(--u) * 3.4);
-    font-style: normal;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    transform: translateX(-50%);
-  }
-
-  /* The moment it goes live, one ring goes out. Once. */
-  .ring {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    box-shadow: inset 0 0 0 calc(var(--u) * 0.5) rgba(255, 255, 255, 0.85);
-    opacity: 0;
-  }
-
-  /* ---------- 3. You walk over ---------- */
-
-  .footstep {
-    position: absolute;
-    width: calc(var(--u) * 1.8);
-    height: calc(var(--u) * 1.8);
-    margin: calc(var(--u) * -0.9);
-    border-radius: 50%;
-    background: var(--white);
-  }
-
-  .you {
-    position: absolute;
-    width: calc(var(--u) * 5.6);
-    height: calc(var(--u) * 5.6);
-    margin: calc(var(--u) * -2.8);
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow:
-      0 0 0 calc(var(--u) * 1.1) var(--white),
-      0 calc(var(--u) * 1) calc(var(--u) * 3) rgba(12, 20, 48, 0.35);
-  }
-
-  /* As in the app: the event's own slide to go, its knob in the accent. */
-  .slide {
-    --pad: calc(var(--u) * 1.4);
-    --knob: calc(var(--u) * 11);
-    position: absolute;
-    left: 8%;
-    right: 8%;
-    bottom: calc(var(--u) * 6);
-    display: grid;
-    place-items: center;
-    height: calc(var(--knob) + var(--pad) * 2);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.2);
-    -webkit-backdrop-filter: blur(14px) saturate(1.6);
-    backdrop-filter: blur(14px) saturate(1.6);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.45),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  }
-
-  .slide-label {
-    padding-left: calc(var(--knob) * 0.6);
-    font-size: calc(var(--u) * 4);
-    font-weight: 500;
-  }
-
-  .knob {
-    position: absolute;
-    left: var(--pad);
-    top: var(--pad);
-    display: grid;
-    place-items: center;
-    width: var(--knob);
-    height: var(--knob);
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 3) rgba(var(--accent-rgb), 0.45);
-  }
-
-  .knob :global(.symbol) {
-    font-size: calc(var(--knob) * 0.4);
-  }
-
-  /* ---------- Playing it ----------
-     Each scene starts once its step is revealed, a beat after the one before it on wide screens.
-     Lead: the post press, the live pin, the walk. Everything else is already there. */
-
-  .step {
-    --t: calc(var(--step) * var(--beat) + 200ms);
-  }
-
-  :global(html.js) .card {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + var(--u) * 4));
-    transition:
-      opacity 700ms var(--ease-out),
-      transform 700ms var(--ease-out);
-    transition-delay: var(--t);
-  }
-
-  :global(html.js) .is-in .card {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
-
-  @keyframes press {
-    40% {
-      transform: scale(0.92);
-    }
-  }
-
-  .is-in .post {
-    animation: press 360ms var(--ease-out) calc(var(--t) + 520ms);
-  }
-
-  :global(html.js) .pin--live .pin-body,
-  :global(html.js) .pin--live em {
-    opacity: 0;
-    transition:
-      opacity 500ms var(--ease-out),
-      transform 560ms var(--ease-out);
-  }
-
-  :global(html.js) .pin--live .pin-body {
-    transform: translateY(calc(var(--u) * -5)) scale(0.88);
-    transition-delay: var(--t);
-  }
-
-  :global(html.js) .pin--live em {
-    transform: translateX(-50%) translateY(calc(var(--u) * 2)) scale(0.94);
-    transition-delay: calc(var(--t) + 340ms);
-  }
-
-  :global(html.js) .is-in .pin--live .pin-body {
-    opacity: 1;
-    transform: none;
-  }
-
-  :global(html.js) .is-in .pin--live em {
-    opacity: 1;
-    transform: translateX(-50%);
-  }
-
-  @keyframes ring {
-    0% {
-      opacity: 0.9;
-      transform: scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: scale(2.4);
-    }
-  }
-
-  .is-in .ring {
-    animation: ring 1400ms var(--ease-out) calc(var(--t) + 380ms);
-  }
-
-  /* The walk: footsteps appear from you to the event, while the knob slides across. */
-  :global(html.js) .footstep {
-    opacity: 0;
-    transform: scale(0.6);
-    transition:
-      opacity 300ms var(--ease-out),
-      transform 300ms var(--ease-out);
-    transition-delay: calc(var(--t) + 260ms + var(--n) * 70ms);
-  }
-
-  :global(html.js) .is-in .footstep {
-    opacity: 0.9;
-    transform: none;
-  }
-
-  :global(html.js) .knob {
-    transition: transform 900ms var(--ease-in-out);
-    transition-delay: var(--t);
-  }
-
-  :global(html.js) .is-in .knob {
-    transform: translateX(calc(100cqw * 0.84 - var(--knob) - var(--pad) * 2));
-  }
-
-  /* Reduced motion: each scene simply arrives finished. Nothing travels. */
-  @media (prefers-reduced-motion: reduce) {
-    :global(html.js) .card,
-    :global(html.js) .pin--live .pin-body,
-    :global(html.js) .pin--live em,
-    :global(html.js) .footstep,
-    :global(html.js) .knob {
-      transition: opacity 300ms ease;
-      transition-delay: 0ms;
-    }
-
-    :global(html.js) .card {
-      transform: translate(-50%, -50%);
-    }
-
-    :global(html.js) .pin--live .pin-body,
-    :global(html.js) .footstep {
-      transform: none;
-    }
-
-    :global(html.js) .pin--live em {
-      transform: translateX(-50%);
-    }
-
-    :global(html.js) .is-in .knob {
-      transform: translateX(calc(100cqw * 0.84 - var(--knob) - var(--pad) * 2));
-    }
-
-    .is-in .post,
-    .is-in .ring {
-      animation: none;
-    }
+    user-select: none;
+    -webkit-user-select: none;
   }
 </style>

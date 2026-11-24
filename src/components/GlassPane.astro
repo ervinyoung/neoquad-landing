@@ -8,6 +8,9 @@
 // and two strengths, for a darker photograph behind it:
 //   --pane-light   the light at the top of the pane (0.16)
 //   --pane-edge    how bright the rim stays down the sides (0.22, at half height)
+// It fades from inside, by --presence (global.css): to bring it in, animate that on a container,
+// never opacity, which would stop it frosting until the fade ends. The shape's other layers take
+// --presence too.
 ---
 
 <div class="pane"></div>
@@ -32,6 +35,7 @@
     backdrop-filter: blur(var(--pane-frost)) saturate(1.1);
     /* Just enough shade outside the rim to lift the pane off a bright sky. */
     box-shadow: 0 calc(var(--pane-frost) * 0.4) calc(var(--pane-frost) * 2.5) rgba(30, 24, 44, 0.12);
+    opacity: var(--presence);
   }
 
   /* The rim is a masked ring of its own, light only, because an element that frosts cannot also be

@@ -53,7 +53,11 @@ const staged = Astro.slots.has('device');
     padding: var(--gutter);
   }
 
+  /* Named for the page switch (the coast, global.css): the photograph and everything standing on
+     it change as one layer. A named element is a backdrop root, so the glass must share its layer
+     with the photograph it frosts; given a layer of its own, it would show clear for the switch. */
   .hero-window {
+    view-transition-name: coast;
     display: flex;
     align-items: flex-end;
     min-height: calc(100svh - 2 * var(--gutter));
@@ -137,46 +141,19 @@ const staged = Astro.slots.has('device');
     z-index: 1;
   }
 
-  /* In the page switch the device gets a layer of its own, so the coast's layer never covers it:
-     the leaving one fades and sinks a little. One name per shape, so a phone is never stretched
-     into a window. Named only while the switch runs (Astro marks <html> then): a named element is
-     a backdrop root, and the glass would have nothing behind it to frost. The arriving device waits
-     until the switch is over, then rises with its frost live. */
-  :global(html[data-astro-transition]) .hero--phone .hero-device {
-    view-transition-name: hero-phone;
-  }
-
-  :global(html[data-astro-transition]) .hero--window .hero-device {
-    view-transition-name: hero-window;
-  }
-
-  :global(::view-transition-old(hero-phone)),
-  :global(::view-transition-old(hero-window)) {
-    animation: device-leave 240ms var(--ease-out) both;
-  }
-
-  :global(::view-transition-new(hero-phone)),
-  :global(::view-transition-new(hero-window)) {
-    animation: none;
-  }
-
-  @keyframes device-leave {
-    to {
-      opacity: 0;
-      transform: translateY(6%);
-    }
-  }
-
+  /* The device rises out of the bottom edge as the headline lands. It is glass, so it fades by
+     --presence (GlassPane), never by opacity: its frost is live from the first frame it shows.
+     After a page switch it waits until the photograph has resolved (900ms, global.css). */
   @keyframes device-rise {
     from {
-      opacity: 0;
+      --presence: 0;
       transform: translateY(34%);
     }
   }
 
   @keyframes device-fade {
     from {
-      opacity: 0;
+      --presence: 0;
     }
   }
 
@@ -185,7 +162,6 @@ const staged = Astro.slots.has('device');
     animation-delay: calc(var(--t0) - 420ms);
   }
 
-  /* The switch takes 900ms (the coast's pull focus, global.css). */
   :global(html[data-enter='switch']) .hero--stage .hero-device {
     animation-delay: max(calc(var(--t0) - 420ms), 900ms);
   }
@@ -197,11 +173,11 @@ const staged = Astro.slots.has('device');
     }
   }
 
-  /* Phones, and any window taller than it is wide: the line centred at the top, the device rising
+  /* Phones held upright, and any window taller than it is wide: the line centred at the top, the device rising
      from the bottom edge, and the action as one wide button pinned beneath it, mirroring the bar
      at the top; the device runs on behind it. On a short window the device gets smaller,
      never closer to the headline. */
-  @media (max-width: 699px), (max-aspect-ratio: 5/6) {
+  @media (max-width: 699px) and (max-aspect-ratio: 4/3), (max-aspect-ratio: 5/6) {
     .hero--stage {
       /* The photograph softens under the line at the top as well as under the action. */
       --coast-soft-top: 1;
@@ -262,33 +238,40 @@ const staged = Astro.slots.has('device');
     /* One wide button, as tall as the bar at the top and the same distance from the window's
        edge, so both sit true in its corners. It lies over the device, so its glass is thicker. */
     .hero--stage .hero-action :global(.btn) {
-      --glass-top: rgba(255, 255, 255, 0.5);
-      --glass-bottom: rgba(255, 255, 255, 0.3);
+      --glass-top: rgba(255, 255, 255, 0.38);
+      --glass-bottom: rgba(255, 255, 255, 0.18);
       flex: 1;
       min-height: var(--action-height);
       font-size: 1.125rem;
-      -webkit-backdrop-filter: blur(28px) saturate(1.7) brightness(1.08);
-      backdrop-filter: blur(28px) saturate(1.7) brightness(1.08);
-      text-shadow: 0 1px 2px rgba(30, 24, 44, 0.3);
+      -webkit-backdrop-filter: blur(28px) saturate(1.7) brightness(0.92);
+      backdrop-filter: blur(28px) saturate(1.7) brightness(0.92);
     }
   }
 
   /* Wider windows: the words hold the bottom left, the line over its action, and the device stands
-     in the right half, rising out of the window's bottom edge. Its size comes from the window's height, within what the width allows. */
-  @media (min-width: 700px) and (min-aspect-ratio: 5/6) {
+     in the right half, rising out of the window's bottom edge. Its size comes from the window's
+     height, within what the width allows. A phone on its side is one of these too, however narrow
+     (a stack would not fit its height); on so short a window the device gets smaller,
+     down to the phone layout's smallest, rather than running up under the bar. */
+  @media (min-width: 700px) and (min-aspect-ratio: 5/6), (min-aspect-ratio: 4/3) {
     .hero--stage {
       --device-shown: 1.6;
       --device-room: calc(100svh - 2 * var(--gutter) - 128px);
-      --device-width: clamp(240px, calc(var(--device-room) / var(--device-shown)), min(36vw, 540px));
+      --device-width: clamp(168px, calc(var(--device-room) / var(--device-shown)), min(36vw, 540px));
       --device-left: calc(75% - var(--device-width) / 2);
       --device-floor: 0px;
     }
 
     /* A window stands larger, from just short of the middle, and just meets the right edge, its map
-       tile still in view. */
+       tile still in view. Like the phone, on a short window it gets smaller rather than running up
+       under the bar: its floor gives way to the room there is. */
     .hero--stage.hero--window {
       --device-shown: 0.58;
-      --device-width: clamp(520px, calc(var(--device-room) / var(--device-shown)), 58vw);
+      --device-width: clamp(
+        min(520px, var(--device-room) / var(--device-shown)),
+        calc(var(--device-room) / var(--device-shown)),
+        58vw
+      );
       --device-left: 45%;
     }
 

@@ -1,0 +1,264 @@
+---
+// A club posts it: the top of New Event (neoQuad-ios 5d968ad, Features/Create/CreateEventScreen.swift),
+// as Student Life fills it in for Club Rush (how/story.ts, from app/sample.ts). It is one system Form in a sheet:
+//   bar      Cancel (xmark) and Submit (checkmark, the confirmation action, so the accent) round the
+//            inline title "New Event"
+//   header   OrgLogo 32 pt (Student Life's logo is symbol:star.fill on #E63946 to #F4A261, its glyph
+//            at 0.44), 12 pt to "Creating event for" (footnote, secondary) over the org's name (body,
+//            semibold) and its VerifiedBadge (checkmark.seal.fill, 14 pt, accent); then the progress
+//            of the form's eight checks and the line under it (footnote, secondary)
+//   basics   Title, and Description (three to eight lines)
+// Playing: the last check is met, so the bar fills and turns from Coastal to Live green
+// (Brand.live) and its line becomes "Ready to submit" (an opacity crossfade, nqOut 0.2).
+// The Form's own metrics (row insets, the inset-grouped corner, the dark elevated grouped colours)
+// are iOS's, not the app's. Sizes are in --pt, set by the scene.
+import Symbol from '../Symbol.astro';
+import { clubRush } from './story';
+---
+
+<div class="sheet">
+  <div class="bar">
+    <span class="bar-button"><Symbol name="xmark" /></span>
+    <b>New Event</b>
+    <span class="bar-button bar-button--confirm"><Symbol name="checkmark" /></span>
+  </div>
+
+  <div class="group">
+    <div class="row org">
+      <span class="logo"><Symbol name="star.fill" /></span>
+      <span class="org-text">
+        <small>Creating event for</small>
+        <span class="org-name">{clubRush.org} <Symbol name="checkmark.seal.fill" /></span>
+      </span>
+    </div>
+    <div class="row progress">
+      <span class="track"><span class="done" /><span class="done done--ready" /></span>
+      <span class="hint">
+        <small>7 of 8 · Next: Answer campus services</small>
+        <small class="ready">Ready to submit</small>
+      </span>
+    </div>
+  </div>
+
+  <div class="group group--open">
+    <div class="row">{clubRush.title}</div>
+    <div class="row description">{clubRush.description}</div>
+  </div>
+</div>
+
+<style>
+  .sheet {
+    position: absolute;
+    inset: 0;
+    background: var(--app-sheet-grouped);
+    padding: calc(76 * var(--pt)) calc(16 * var(--pt)) 0;
+  }
+
+  /* ---------- Bar ---------- */
+
+  .bar {
+    position: absolute;
+    left: calc(16 * var(--pt));
+    right: calc(16 * var(--pt));
+    top: calc(14 * var(--pt));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bar b {
+    font-size: calc(17 * var(--pt));
+    font-weight: 600;
+  }
+
+  .bar-button {
+    display: grid;
+    place-items: center;
+    width: calc(44 * var(--pt));
+    height: calc(44 * var(--pt));
+    border-radius: 50%;
+    background: var(--app-glass);
+    box-shadow: inset 0 0 0 calc(0.5 * var(--pt)) rgba(255, 255, 255, 0.12);
+    font-size: calc(17 * var(--pt));
+  }
+
+  .bar-button--confirm {
+    background: var(--app-coastal);
+    box-shadow: inset 0 calc(0.5 * var(--pt)) 0 rgba(255, 255, 255, 0.3);
+  }
+
+  /* ---------- Groups ---------- */
+
+  .group {
+    border-radius: calc(26 * var(--pt) * var(--corner-reach));
+    corner-shape: var(--corner);
+    background: var(--app-cell);
+    overflow: hidden;
+  }
+
+  .group + .group {
+    margin-top: calc(20 * var(--pt));
+  }
+
+  /* The form scrolls on past the scene's edge. */
+  .group--open {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    padding-bottom: calc(400 * var(--pt));
+  }
+
+  .row {
+    position: relative;
+    min-height: calc(44 * var(--pt));
+    padding: calc(11 * var(--pt)) calc(16 * var(--pt));
+    font-size: calc(17 * var(--pt));
+    line-height: calc(22 * var(--pt));
+  }
+
+  /* The separator starts under the row's first text, as a Form lines it up. */
+  .row + .row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: var(--rule-inset, calc(16 * var(--pt)));
+    right: 0;
+    height: calc(0.5 * var(--pt));
+    min-height: 0.5px;
+    background: var(--app-separator);
+  }
+
+  .progress {
+    --rule-inset: calc(60 * var(--pt));
+  }
+
+  small {
+    display: block;
+    color: var(--app-label-2);
+    font-size: calc(13 * var(--pt));
+    line-height: calc(18 * var(--pt));
+  }
+
+  .org {
+    display: flex;
+    align-items: center;
+    gap: calc(12 * var(--pt));
+  }
+
+  .logo {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: calc(32 * var(--pt));
+    height: calc(32 * var(--pt));
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e63946, #f4a261);
+    font-size: calc(32 * 0.44 * var(--pt));
+  }
+
+  .org-text small {
+    margin-bottom: calc(1 * var(--pt));
+  }
+
+  .org-name {
+    display: flex;
+    align-items: center;
+    gap: calc(4 * var(--pt));
+    font-weight: 600;
+  }
+
+  .org-name :global(.symbol) {
+    color: var(--app-coastal);
+    font-size: calc(14 * var(--pt));
+  }
+
+  /* ProgressView, linear: a 4 pt capsule on the system's fill. */
+  .progress {
+    padding-top: calc(13 * var(--pt));
+    padding-bottom: calc(13 * var(--pt));
+  }
+
+  .track {
+    position: relative;
+    display: block;
+    height: calc(4 * var(--pt));
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--app-fill);
+  }
+
+  .done {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--app-coastal);
+    transform: translateX(-12.5%);
+  }
+
+  .done--ready {
+    background: var(--app-live);
+    opacity: 0;
+  }
+
+  .hint {
+    display: grid;
+    margin-top: calc(6 * var(--pt));
+  }
+
+  .hint small {
+    grid-area: 1 / 1;
+  }
+
+  .ready {
+    opacity: 0;
+  }
+
+  .description {
+    color: var(--app-label);
+  }
+
+  /* ---------- Playing it ---------- */
+
+  :global(html.js) .done {
+    transition: transform 600ms var(--ease-out);
+    transition-delay: var(--t);
+  }
+
+  :global(html.js) .done--ready,
+  :global(html.js) .hint small {
+    transition: opacity 200ms var(--ease-out);
+    transition-delay: calc(var(--t) + 400ms);
+  }
+
+  :global(html.js .is-in) .done {
+    transform: none;
+  }
+
+  :global(html.js .is-in) .done--ready,
+  :global(html.js .is-in) .ready {
+    opacity: 1;
+  }
+
+  :global(html.js .is-in) .hint small:not(.ready) {
+    opacity: 0;
+  }
+
+  /* Without scripts, or with Reduce Motion, it is shown ready. */
+  :global(html:not(.js)) .done {
+    transform: none;
+  }
+
+  :global(html:not(.js)) .done--ready,
+  :global(html:not(.js)) .ready {
+    opacity: 1;
+  }
+
+  :global(html:not(.js)) .hint small:not(.ready) {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .done {
+      transition: none;
+    }
+  }
+</style>

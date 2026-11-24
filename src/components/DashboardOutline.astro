@@ -12,18 +12,22 @@
 // titles next, structure quietest. It is decoration; the window is aria-hidden.
 import map from '../data/campus-map.json';
 import Icon, { type IconName } from './dashboard/Icon.astro';
+import { onMap } from './app/map';
+import { pins as eventPins } from './app/pin';
+import { events } from './app/sample';
 import { snapshot, comparison } from './dashboard/sample';
 
 // The sidebar's rows, by their icons (dashboard/Sidebar.astro); their words are too small to read here.
 const work: IconName[] = ['trend', 'inbox', 'eye', 'calendar', 'plus'];
 const admin: IconName[] = ['user', 'building', 'list'];
-// The map tile shows the campus band of the phone's outline, at the tile's proportion.
-const view = { x: 0, y: 52, w: 100, h: 72 };
-const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => ({
-  x: (p.x / 100) * map.width,
-  y: (p.y / 100) * map.height,
-  live: i === 2,
-}));
+// The map tile shows the campus band of the phone's outline, at the tile's proportion (1.4:1), with
+// the phone's own pins (the demo campus's events, app/pin.ts) as dots, the live ones marked. It is
+// framed so every dot it shows is whole: the northernmost pin stays out of it, clear of the edge.
+const view = { x: 0.7, y: 30.4, w: 98.6, h: 70.4 };
+const pins = eventPins(events).map((pin) => {
+  const at = onMap(map, pin);
+  return { x: (at.x / 100) * map.width, y: (at.y / 100) * map.height, live: pin.live };
+});
 ---
 
 <div class="dash">
@@ -41,7 +45,7 @@ const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => 
 
   <div class="main">
     <header class="head">
-      <p class="heading">Insights</p>
+      <p class="heading"><span class="words">Insights</span><i class="line"></i></p>
       <div class="controls">
         <i class="line line--long"></i>
         <span class="field"></span>
@@ -58,7 +62,7 @@ const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => 
         {
           snapshot.map((card, i) => (
             <div class="card" style={`--n:${i}`}>
-              <p class="title"><Icon name={card.icon as IconName} />{card.title}</p>
+              <p class="title"><Icon name={card.icon as IconName} /><span class="words">{card.title}</span><i class="line"></i></p>
               <p class="figure">{card.value}</p>
               <i class="line line--short"></i>
             </div>
@@ -69,13 +73,13 @@ const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => 
             <path class="map-streets" d={map.streets} />
             <path class="map-walks" d={map.walks} />
             <path class="map-buildings" d={map.buildings} />
-            {pins.map((p) => <circle class:list={['map-pin', p.live && 'map-pin--live']} cx={p.x} cy={p.y} r="2.4" />)}
+            {pins.map((p) => <circle class:list={['map-pin', p.live && 'map-pin--live']} cx={p.x} cy={p.y} r="1.7" />)}
           </svg>
         </div>
       </div>
 
       <div class="card compare" style="--n:5">
-        <p class="title"><Icon name="trend" />Compared with the previous 7 days</p>
+        <p class="title"><Icon name="trend" /><span class="words">Compared with the previous 7 days</span><i class="line"></i></p>
         <div class="columns">
           {
             comparison.map((column) => (
@@ -89,7 +93,7 @@ const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => 
       </div>
 
       <div class="card chart" style="--n:6">
-        <p class="title"><Icon name="trend" />Daily RSVPs and views</p>
+        <p class="title"><Icon name="trend" /><span class="words">Daily RSVPs and views</span><i class="line"></i></p>
       </div>
     </div>
   </div>
@@ -318,6 +322,46 @@ const pins = [map.pins.Garden, map.pins.Overlook, map.pins.Pride].map((p, i) => 
   .title :global(.icon) {
     font-size: 1.1em;
     opacity: 0.8;
+  }
+
+  /* Words too small to read are drawn as a hairline, as the sidebar's are: a title in a window under
+     720 px wide would be under 7.5 px tall, the heading under 580 px. The hairline keeps its icon. */
+  .title .line,
+  .heading .line {
+    display: none;
+    width: 7cqw;
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  .heading .line {
+    width: 6cqw;
+    height: 2px;
+    margin-top: 0.4cqw;
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  @container (max-width: 720px) {
+    .title .words {
+      display: none;
+    }
+
+    .title .line {
+      display: block;
+    }
+
+    .title :global(.icon) {
+      font-size: 1.6cqw;
+    }
+  }
+
+  @container (max-width: 580px) {
+    .heading .words {
+      display: none;
+    }
+
+    .heading .line {
+      display: block;
+    }
   }
 
   .figure {
