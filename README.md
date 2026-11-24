@@ -1,60 +1,26 @@
 # neoQuad landing
 
-One site, two audiences. `/` speaks to students, `/schools` to administrators, and staff sign in from the nav.
-`/privacy`, `/terms` and the not-found page share the same design.
+The neoQuad website: one page for students and one for schools.
+
+![The Students page, at /](docs/students.jpg)
+
+![The Schools page, at /schools](docs/schools.jpg)
+
+## Run the site
 
 ```bash
 npm install
-npm run dev      # http://localhost:4321
-npm run build    # static site in dist/, deployed by Vercel
+npm run dev
 ```
 
-## The pieces
-
-Each piece hides how it works behind a small interface. Start from the page and reach for these.
-
-| Piece | Use | What it hides |
-| --- | --- | --- |
-| `Hero` | `<Hero scene="dusk" line={[…]}><Action to="app" /></Hero>`, plus an optional `slot="device"` and `device="phone" \| "window"` | The window, the coast, the word-by-word headline, when the action arrives, and the layouts: default (line bottom left, action bottom right), and the stage when a device is given (phones and tall windows: line on top, device rising behind one wide button; wide windows: line and action bottom left, device rising on the right; a window larger, running off the right edge) |
-| `GlassPane` | inside a device shape, which sets `--pane-radius`, `--pane-frost`, `--pane-rim` | The hero glass both devices share: the frost, the light toward the top, the rim of light, the smoothed corner |
-| `GlassPhone` | `<GlassPhone slot="device">…screen…</GlassPhone>` | A phone of the hero glass (`GlassPane`) with its Dynamic Island; scales to any width (sizes in `cqw`) |
-| `GlassWindow` | `<GlassWindow slot="device">…screen…</GlassWindow>` with `<Hero device="window">` | A display-proportioned window of the same glass; sizes in `cqw` |
-| `AppHome` | `<AppHome />` inside a `GlassPhone` | The neoQuad home screen in hairlines, the app's own parts under `src/components/app/`: `HomeMap` (the SBCC outline from `src/data/campus-map.json`, framed as the app frames campus at launch, with the demo campus's events pinned as the app clusters them), `MapControls`, `HomeSheet` (Events, Happening Now and the `TabBar`; it fades out where the hero's stage cuts the phone, read from `--device-shown`) |
-| `DashboardOutline` | `<DashboardOutline />` inside a `GlassWindow` | The staff dashboard's Insights view traced in hairlines (sidebar, header, four snapshot cards, the campus map tile, the comparison row, the chart's top), one figure from `dashboard/sample.ts`; fades up, cards settle in turn |
-| `Symbol` | `<Symbol name="fork.knife" />` | The app's SF Symbols, sized by font size like SwiftUI; `swift tools/sf-symbols.swift > src/icons/symbols.ts` adds one (Apple's SF Symbols licence applies) |
-| `Coast` | `<Coast scene="dusk" \| "blue-hour" />` | The photograph as a living place (WebGL, once the page is idle, paused off screen: a slow camera with parallax by depth, clouds on the wind, swell on the sea, from the map and plate made by `tools/coast-maps.py`), the soft first paint, the progressive blur (one table of stops, used by the still picture and the living one), preloading the other scene |
-| `Action` | `<Action to="app" \| "booking" tone="clear" \| "accent" compact? />` | Links, labels, the iPhone / web swap, the Liquid Glass button |
-| `Mark`, `Lockup` | `<Mark wave />`, `<Lockup />` | The seed artwork and its Wave |
-| `HowItWorks` | `<HowItWorks />` | The three steps (post, live on the map, walk over) drawn in glass on one strip of the coast, which joins into one window on wide screens and plays once, left to right, as it comes into view; the scenes under `src/components/how/` follow Club Rush (`how/story.ts`) and are built from the same app parts in colour |
-| App parts | `src/components/app/` | One faithful set of iOS parts (neoQuad-ios 5d968ad), each naming its Swift source: `EventPin` and `MapControls` take `tone="colour" \| "outline"` (the app's dark mode, or the hero's engraving); `sample.ts` is the demo campus (`Demo/SampleCampus.swift`: events, places, times), `pin.ts` groups events into pins as the map does, `map.ts` puts a coordinate on a campus drawing, `pin-shape.ts` and `spring.ts` are the pin's outline and SwiftUI's spring |
-| `Words` | `<Words parts={['Plain', { i: 'italic' }, 'br']} />` | Splitting a line into words that arrive in turn |
-| `Dashboard` | `<Dashboard />` | The staff site's Insights, Events and New event screens rebuilt in HTML on its own 1862 × 1086 grid (every length `calc(var(--u) * px)`, so it scales sharp to any width), the shared sidebar, tabs and keyboard support. All figures, calendar events and the filled-in form come from `dashboard/sample.ts`, which derives every percentage and comparison so the screens agree; the map tile is `assets/dashboard/map.jpg` |
-| `Nav` | (placed by `Base`) | Subtle Liquid Glass that reads what is under it and switches ink; the switch; the page's action, always there; staff sign-in beside it on wide screens |
-| `Base` | `<Base audience="students" \| "schools" \| "none" …>` | Head tags, the persistent nav, footer, and the flags on `<html>` |
-| `Legal` | `<Legal name="privacy" \| "terms" title={[…]} />` | Layout, contents list and text from `src/content/legal/` |
+The site runs at http://localhost:4321. To build it, run `npm run build`; the static site goes to `dist/`, and Vercel deploys it.
 
 ## Where to change things
 
 | To change | Edit |
 | --- | --- |
-| Any outbound link (App Store, web app, staff, booking form, email) | `src/config.ts` |
-| Colors, type, spacing, motion curves, the glass button, page transitions | `src/styles/global.css` |
-| Student page / Schools page | `src/pages/index.astro` / `src/pages/schools.astro` |
-| Privacy and Terms text | `src/content/legal/*.html` (and `*.json` for the contents list and date) |
-| App screens in the iPhone frame, at 9:41 | `python3 tools/frame-screens.py` writes `src/assets/app/` |
-| The campus drawings (hero phone, dashboard tile, How it works) | `python3 tools/campus-map.py`: one fetch, one JSON per view in its `VIEWS` table, into `src/data/` |
-| Events, places and times shown in the app parts | `src/components/app/sample.ts`; an event's picture goes in `src/assets/app/photos/` |
-| The seed logo | `src/data/seed.json`, `src/data/lockup.json` (from the Logo Pack) |
-
-## Rules of the house
-
-- Copy follows the Words slide of the guidelines: no "platform", "operating system", "engagement", "telemetry" or "users".
-- One accent, neoQuad Blue (`--accent`, `#1477E7`). It marks the action and appears only below the first screen: the nav's action takes it once the hero has scrolled away, and the closing button has it. Everything else is black, white and the photographs.
-- Buttons are Liquid Glass: clear on the first screen, tinted with the accent after it.
-- A sharp photograph when the picture leads, a blurred one when words lead.
-- Corners: an inner corner is the outer radius minus the space between them, and rounded rectangles are smoothed (Figma's 60%) with `--corner` and `--corner-reach`. The recipe is at the top of `src/styles/global.css`. Capsules and circles stay round.
-- Motion is calm and has a job. On arrival the seed plays the Wave once and the headline settles in word by word. The sea keeps moving. Switching between Students and Schools pulls focus on the coast while the words change places. Controls respond to press. Hover styles are gated to real pointers, and everything respects Reduce Motion.
-
-`legacy/` holds the previous single-file site for reference. It is not built or deployed.
-
-`qa/` holds the last test pass: before and after screenshots for each fix, and the reports.
+| Links (App Store, web app, staff sign-in, booking, email) | `src/config.ts` |
+| Colors, type, spacing and motion | `src/styles/global.css` |
+| The Students and Schools pages | `src/pages/index.astro` and `src/pages/schools.astro` |
+| The privacy policy and terms | `src/content/legal/` |
+| Events and places shown in the app drawings | `src/components/app/sample.ts` |
